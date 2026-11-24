@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 import { apiRequest, errorMessage } from '../../../../data/api';
 import type { PostAction } from '../accounts.type';
 
-const usePostAction = (): PostAction => {
+const usePostAction = (onDone?: () => void): PostAction => {
   const [busy, setBusy] = useState(false);
 
   const post = useCallback((path: string, json: object | undefined, done: string) => {
@@ -14,8 +14,11 @@ const usePostAction = (): PostAction => {
         () => toast({ variant: 'success', message: done }),
         (failure: unknown) => toast({ variant: 'danger', message: errorMessage(failure) }),
       )
-      .finally(() => setBusy(false));
-  }, []);
+      .finally(() => {
+        setBusy(false);
+        onDone?.();
+      });
+  }, [onDone]);
 
   return { busy, post };
 };

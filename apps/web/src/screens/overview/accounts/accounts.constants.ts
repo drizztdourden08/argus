@@ -1,6 +1,4 @@
 /* @layer renderer-app @kind constants */
-import { defineStatuses } from '@drizztdourden08/tessera';
-
 const ACCOUNTS_COLL = 'accounts';
 const ACCOUNTS_STATE_COLL = 'accountsState';
 const DRIFT_DOC = 'drift';
@@ -25,13 +23,7 @@ const CLOCK_SECONDS: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-
 const LOGIN_DATE: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
 const DAY_MS = 86_400_000;
 const CARDS_TICK_MS = 60_000;
-const CARD_MIN_WIDTH = 320;
-const ASIDE_LABEL = 'Switch and sync activity';
-
-const RECEIVE_STATUSES = defineStatuses({
-  open: { label: 'Can receive', tone: 'success' },
-  locked: { label: 'Switching here is off', tone: 'neutral' },
-});
+const CARD_MIN_WIDTH = 220;
 
 const DEFAULT_SWITCH_AT = 98;
 const DEFAULT_HANDOVER_PERCENT = 99;
@@ -60,12 +52,10 @@ const HANDOVER_OPTIONS = [
   { value: 'auto', label: 'Auto' },
 ];
 
-const ACTIVITY_TITLE = 'Activity';
-
 export {
-  ACCOUNTS_COLL, ACCOUNTS_STATE_COLL, ACTIVITY_TITLE, ASIDE_LABEL, ASK_AT_LABEL, atLimitText, AUTO_SWITCH_HINT, AUTO_SWITCH_LABEL, CAN_RECEIVE_HINT,
+  ACCOUNTS_COLL, ACCOUNTS_STATE_COLL, ASK_AT_LABEL, atLimitText, AUTO_SWITCH_HINT, AUTO_SWITCH_LABEL, CAN_RECEIVE_HINT,
   CAN_RECEIVE_LABEL, CARD_MIN_WIDTH, CARDS_TICK_MS, CLOCK_SECONDS, CURRENT_LABEL, CURRENT_TIP, DAY_MS, DEFAULT_HANDOVER_PERCENT, DEFAULT_SWITCH_AT,
   DRIFT_DOC, HANDOVER_HINT, HANDOVER_LABEL, HANDOVER_OPTIONS, LIMIT_LABEL, LOGIN_DATE, MAX_PERCENT, METER_TONE, MIN_PERCENT, movesText, NO_USAGE,
-  NONE_FOUND, RECEIVE_STATUSES, RESET_DAY, RESET_TIME, RULES_SUBTITLE, RULES_TITLE, SCOPED_KIND, SWITCH_ACTION, SWITCH_AT_LABEL, SWITCH_OFF_TEXT,
+  NONE_FOUND, RESET_DAY, RESET_TIME, RULES_SUBTITLE, RULES_TITLE, SCOPED_KIND, SWITCH_ACTION, SWITCH_AT_LABEL, SWITCH_OFF_TEXT,
   SWITCH_RUNNING_TEXT, WEEKLY_KIND,
 };

@@ -47,9 +47,6 @@ const NEVER_SYNCED = 'No sync has run yet.';
 const SYNC_TITLE = 'Sidebar sync';
 const BOTH_MATCH = 'Both sidebars match';
 const REVIEW_LABEL = 'Review differences';
-const MERGE_LABEL = 'Merge both accounts';
-const COPY_TITLE = 'Copy one way';
-const MERGE_TITLE = 'Merge both ways';
 const COMPARE_PATH = '/api/accounts/compare';
 const SAME_AS_CURRENT = 'Same as current';
 const DIFF_KINDS: Readonly<Record<string, readonly [string, string]>> = {
@@ -70,12 +67,11 @@ const DRIFT_KINDS: Readonly<Record<string, readonly [string, string]>> = {
   thread: ['sub-thread', 'sub-threads'],
 };
 const UNDO_LABEL = 'Undo last sync or copy';
-const SYNC_STARTED = 'Sidebar merge started.';
 const COPY_STARTED = 'Sidebar copy started.';
 const UNDO_STARTED = 'Undoing the last sync.';
 
 export {
-  ACTIVE_PHASES, BOTH_MATCH, COMPARE_PATH, COPY_STARTED, COPY_TITLE, DIFF_KINDS, DIFF_PHRASES, DRIFT_KINDS, FAILED_TEXT, LOG_LIMIT,
-  MATCH_TEXT, MERGE_LABEL, MERGE_TITLE, NEVER_SYNCED, PHASE_LABEL, QUIT_CANCEL_LABEL, QUIT_CANCEL_PATH, QUIT_FALLBACK,
-  REVIEW_LABEL, RUN_DOC, SAME_AS_CURRENT, STEP_KIND_LABEL, SYNC_PATH, SYNC_STARTED, SYNC_STEPS_COLL, SYNC_TITLE, UNDO_LABEL, UNDO_PATH, UNDO_STARTED,
+  ACTIVE_PHASES, BOTH_MATCH, COMPARE_PATH, COPY_STARTED, DIFF_KINDS, DIFF_PHRASES, DRIFT_KINDS, FAILED_TEXT, LOG_LIMIT,
+  MATCH_TEXT, NEVER_SYNCED, PHASE_LABEL, QUIT_CANCEL_LABEL, QUIT_CANCEL_PATH, QUIT_FALLBACK,
+  REVIEW_LABEL, RUN_DOC, SAME_AS_CURRENT, STEP_KIND_LABEL, SYNC_PATH, SYNC_STEPS_COLL, SYNC_TITLE, UNDO_LABEL, UNDO_PATH, UNDO_STARTED,
 };

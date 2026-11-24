@@ -1,31 +1,18 @@
 /* @layer renderer-app @kind component */
-import { Grid } from '@drizztdourden08/tessera';
-import { useNow } from '../../clock';
-import { CARD_MIN_WIDTH, CARDS_TICK_MS } from '../accounts.constants';
-import type { AccountCardsProps } from '../cards.type';
+import { DensityScope, Grid } from '@drizztdourden08/tessera';
+import { CARD_MIN_WIDTH } from '../accounts.constants';
 import { orderAccounts } from '../model';
+import type { AccountCardsProps } from '../next.type';
 import { AccountCard } from './AccountCard';
 
 const AccountCards = (props: AccountCardsProps) => {
-  const { accounts, rules, compare, confirmKey, switching, onSwitch } = props;
-  const now = useNow(CARDS_TICK_MS);
-  const current = accounts.find((account) => account.active === true) ?? null;
+  const { accounts, onOpen } = props;
   return (
-    <Grid fit minColWidth={CARD_MIN_WIDTH} gap="md" aria-label="Accounts">
-      {orderAccounts(accounts).map((account) => (
-        <AccountCard
-          key={account.id}
-          account={account}
-          current={current}
-          rules={rules}
-          compare={compare}
-          now={now}
-          confirming={confirmKey === account.id || confirmKey === account.key}
-          switching={switching}
-          onSwitch={onSwitch}
-        />
-      ))}
-    </Grid>
+    <DensityScope density="compact">
+      <Grid fit minColWidth={CARD_MIN_WIDTH} gap="sm" aria-label="Accounts">
+        {orderAccounts(accounts).map((account) => <AccountCard key={account.id} account={account} onOpen={onOpen} />)}
+      </Grid>
+    </DensityScope>
   );
 };
 

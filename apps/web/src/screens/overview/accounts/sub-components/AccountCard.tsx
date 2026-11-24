@@ -1,33 +1,30 @@
 /* @layer renderer-app @kind component */
-import { Card, Stack, Status, Text } from '@drizztdourden08/tessera';
-import { CURRENT_LABEL, CURRENT_TIP } from '../accounts.constants';
-import type { AccountCardProps } from '../cards.type';
-import { differsText, rowState } from '../model';
-import { AccountFacts } from './AccountFacts';
+import { Card, Inline, ProgressBar, Stack, Status } from '@drizztdourden08/tessera';
+import type { DragEvent } from 'react';
+import { CURRENT_LABEL, CURRENT_TIP, METER_TONE } from '../accounts.constants';
+import { accountKey, limitLabel, limitLine, mainLimit } from '../model';
+import { DRAG_TYPE } from '../next.constants';
+import type { AccountCardProps } from '../next.type';
 import { AccountName } from './AccountName';
-import { LimitMeters } from './LimitMeters';
-import { ReceiveLine } from './ReceiveLine';
-import { SwitchAction } from './SwitchAction';
+
+const toneOf = (severity: string | undefined) => METER_TONE[severity === 'critical' || severity === 'warning' ? severity : 'normal'];
 
 const AccountCard = (props: AccountCardProps) => {
-  const { account, current, rules, compare, now, confirming, switching, onSwitch } = props;
+  const { account, onOpen } = props;
+  const key = accountKey(account);
+  const main = mainLimit(account);
+  const line = limitLine(account);
   const active = account.active === true;
-  const state = rowState(account, rules, now, switching);
-  const differs = active ? null : differsText(compare, account.key ?? account.id);
+  const drag = (event: DragEvent) => event.dataTransfer.setData(DRAG_TYPE, key);
   return (
-    <Card
-      title={<AccountName account={account} />}
-      actions={active ? <Status tone="info" size="sm" dot title={CURRENT_TIP}>{CURRENT_LABEL}</Status> : undefined}
-      edge={active ? 'left' : undefined}
-      edgeTone={active ? 'info' : undefined}
-    >
-      <Stack gap="md">
-        {active && <Text variant="caption" tone="muted">{CURRENT_TIP}</Text>}
-        <ReceiveLine state={state} />
-        <LimitMeters account={account} now={now} />
-        <AccountFacts account={account} differs={differs} />
-        {account.error && <Text variant="caption" tone="warning">{account.error}</Text>}
-        {!active && <SwitchAction account={account} current={current} state={state} switching={switching} confirming={confirming} onSwitch={onSwitch} />}
+    <Card draggable onDragStart={drag} onActivate={() => onOpen(key)} edge={active ? 'left' : undefined} edgeTone={active ? 'info' : undefined}>
+      <Stack gap="xs">
+        <Inline gap="xs" align="center" wrap>
+          <AccountName account={account} />
+          {active && <Status tone="info" size="sm" dot title={CURRENT_TIP}>{CURRENT_LABEL}</Status>}
+        </Inline>
+        {main && <ProgressBar value={Math.round(main.percent ?? 0)} max={100} tone={toneOf(main.severity)} label={limitLabel(main)} formatValue={(value) => `${value}%`} showValue />}
+        {line && <Status tone="danger" size="sm" dot>{line}</Status>}
       </Stack>
     </Card>
   );

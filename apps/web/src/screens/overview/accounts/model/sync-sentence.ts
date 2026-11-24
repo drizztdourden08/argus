@@ -10,7 +10,7 @@ const joinNames = (names: readonly string[]): string => {
 const syncSentence = (accounts: readonly Account[]): string => {
   const names = joinNames(accounts.map((account) => accountName(accounts, account.id)));
   return `Switching accounts copies the current account's chats, folders and archived state onto the next one, which keeps what only it has. `
-    + `Copy does the same by hand in the direction you pick. Merge makes ${names} match both ways: each gets what it lacks, and archived state follows the newest change.`;
+    + `Pick two accounts and a direction to copy by hand. Both opens a review of ${names}, where you pick each difference.`;
 };
 
 export { syncSentence };

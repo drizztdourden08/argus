@@ -11,6 +11,12 @@ interface AccountLimit {
   isActive?: boolean;
 }
 
+interface AccountLimitState {
+  confirmed?: boolean;
+  atMs?: number | null;
+  untilMs?: number | null;
+}
+
 interface AccountRules {
   autoSwitch?: boolean;
   switchAt?: number;
@@ -29,11 +35,33 @@ interface AccountDoc {
   cli?: { loggedIn?: boolean; loginExpiresAt?: string | null; orgId?: string | null };
   desktopLogin?: { saved?: boolean; savedAt?: string | null };
   limits?: AccountLimit[];
+  limit?: AccountLimitState;
   readAt?: string | null;
   error?: string | null;
   burnPerMin?: number | null;
   rules?: AccountRules;
   chats?: { total?: number; archived?: number; folders?: number };
+}
+
+type NextWhen = { kind: 'percent'; percent: number } | { kind: 'time'; atMs: number } | { kind: 'unknown' };
+
+interface NextSwitch {
+  from?: string | null;
+  to?: string | null;
+  source?: 'owner' | 'auto';
+  when?: NextWhen;
+}
+
+type NextRunPhase = 'idle' | 'handover-asked' | 'handover-done' | 'limit-confirmed' | 'switching' | 'switched' | 'failed';
+
+interface NextRun {
+  phase?: NextRunPhase;
+  atMs?: number | null;
+}
+
+interface AccountsStatus {
+  next?: NextSwitch;
+  run?: NextRun;
 }
 
 interface AccountsDrift {
@@ -186,7 +214,7 @@ interface AccountsSettings {
 
 export type {
   DesktopPhase,
-  AccountDoc, AccountLimit, AccountSeverity, AccountsDrift, AccountsRun, RunPhase, SyncStepDoc, SyncStepKind,
+  AccountDoc, AccountLimit, AccountLimitState, AccountsStatus, AccountSeverity, NextRun, NextRunPhase, NextSwitch, NextWhen, AccountsDrift, AccountsRun, RunPhase, SyncStepDoc, SyncStepKind,
   AccountsSettings, AccountsSwitch, HandoverRule, SettingsAccount, SettingsRules, SwitchPhase, SwitchStage,
   SwitchStepDoc, SwitchStepState, SwitchSyncCounts, SwitchSyncDoc, SwitchThreadDoc, RunResult,
 };
