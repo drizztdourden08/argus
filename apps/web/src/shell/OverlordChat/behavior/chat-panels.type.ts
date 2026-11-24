@@ -19,7 +19,7 @@ type ChatTab = 'chat' | 'rules' | 'queue' | 'settings';
 
 type QueueSectionName = 'wakes' | 'held' | 'alerts';
 
-interface RuleRowProps {
+interface OverlordRuleCardProps {
   rule: OverlordRule;
   busy: boolean;
   onToggle: (enabled: boolean) => void;
@@ -58,4 +58,4 @@ interface ChatOpen {
   close: () => void;
 }
 
-export type { ChatOpen, ChatTab, Editing, QueueFeedProps, QueueLineProps, QueueSectionName, QueueSectionProps, RuleFormProps, RuleFormState, RuleRowProps };
+export type { ChatOpen, OverlordRuleCardProps, ChatTab, Editing, QueueFeedProps, QueueLineProps, QueueSectionName, QueueSectionProps, RuleFormProps, RuleFormState };

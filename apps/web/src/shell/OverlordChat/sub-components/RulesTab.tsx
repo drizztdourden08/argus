@@ -5,8 +5,8 @@ import { Panel } from '../../Panel';
 import { useRules } from '../behavior/useRules';
 import { NO_RULES } from '../OverlordChat.constants';
 import type { Editing } from '../behavior/chat-panels.type';
+import { OverlordRuleCard } from './OverlordRuleCard';
 import { RuleForm } from './RuleForm';
-import { RuleRow } from './RuleRow';
 
 const RulesTab = () => {
   const rules = useRules();
@@ -25,7 +25,7 @@ const RulesTab = () => {
         {rules.rules.length === 0 && <EmptyState message={NO_RULES} size="sm" />}
         <Flex direction="column" gap="sm">
           {rules.rules.map((rule) => (
-            <RuleRow
+            <OverlordRuleCard
               key={rule.id}
               rule={rule}
               busy={rules.action.busy}
