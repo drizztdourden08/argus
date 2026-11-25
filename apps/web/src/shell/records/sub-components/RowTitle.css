@@ -1,0 +1,8 @@
+/* @layer renderer-app @kind style */
+.row-title {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
