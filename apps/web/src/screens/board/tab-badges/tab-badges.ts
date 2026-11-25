@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind logic */
 import type { TabBadgeTone } from '@drizztdourden08/tessera';
 import type { Agent } from '../../../data/agents';
-import type { Launcher } from '../../../data/types';
+import type { ReleaseChannel } from '../../../data/remote';
+import type { Launcher, PullRequest } from '../../../data/types';
 import type { Worktree } from '../../../data/worktrees';
 import type { BoardWork } from '../feed-model';
 import { ACTIVE_AGENT_STATUSES, NEEDS_DECISION_STATUSES, STALE_AGENT_MS } from './tab-badges.constants';
@@ -38,7 +39,14 @@ const buildsBadge = (launchers: readonly Launcher[]): Badge => ({ count: launche
 
 const worktreesBadge = (worktrees: readonly Worktree[]): Badge => {
   const waiting = worktrees.filter((worktree) => NEEDS_DECISION_STATUSES.includes(worktree.status));
-  return { count: waiting.length, tone: toneOf(waiting.length > 0, 'warn') };
+  return { count: worktrees.length, tone: toneOf(waiting.length > 0, 'warn') };
+};
+
+const changesBadge = (prs: readonly PullRequest[]): Badge => ({ count: prs.length });
+
+const releasesBadge = (channels: readonly ReleaseChannel[]): Badge => {
+  const versions = channels.flatMap((channel) => channel.versions);
+  return { count: versions.length, tone: toneOf(versions.some((version) => version.replay?.state === 'pending'), 'warn') };
 };
 
 const testsBadge = (count: number): Badge => ({ count, tone: toneOf(count > 0, 'warn') });
@@ -48,6 +56,8 @@ const boardBadges = (input: {
   agents: readonly Agent[];
   launchers: readonly Launcher[];
   worktrees: readonly Worktree[];
+  prs: readonly PullRequest[];
+  channels: readonly ReleaseChannel[];
   toRun: number;
   now: number;
 }): BoardBadges => ({
@@ -57,6 +67,8 @@ const boardBadges = (input: {
   tests: testsBadge(input.toRun),
   builds: buildsBadge(input.launchers),
   worktrees: worktreesBadge(input.worktrees),
+  changes: changesBadge(input.prs),
+  releases: releasesBadge(input.channels),
 });
 
 export { boardBadges };

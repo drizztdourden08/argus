@@ -14,14 +14,17 @@ const TestSections = (props: TestSectionsProps) => {
   const toRun = sortToRun(tests.filter(isToRun), order, direction);
   const done = doneTests(tests, showPassed);
   const hint = toRun.length > 0 ? <KeyHint /> : undefined;
+  const showToRun = toRun.length > 0 || done.length === 0;
   return (
     <>
-      <Box role="group" aria-label="To run">
-        <SectionHead icon="list-checks" title="To run" count={toRun.length} action={hint} />
-        {toRun.length > 0
-          ? <CaseItems tests={toRun} />
-          : <Text tone="muted" className="test-section__empty">{tests.length > 0 ? 'Nothing left to run.' : emptyText}</Text>}
-      </Box>
+      {showToRun && (
+        <Box role="group" aria-label="To run">
+          <SectionHead icon="list-checks" title="To run" count={toRun.length} action={hint} />
+          {toRun.length > 0
+            ? <CaseItems tests={toRun} />
+            : <Text tone="muted" className="test-section__empty">{tests.length > 0 ? 'Nothing left to run.' : emptyText}</Text>}
+        </Box>
+      )}
       {done.length > 0 && <DoneList tests={done} />}
     </>
   );

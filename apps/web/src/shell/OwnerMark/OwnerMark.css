@@ -1,0 +1,5 @@
+/* @layer renderer-app @kind style */
+.owner-mark--brand {
+  display: inline-flex;
+  margin-inline: var(--space-xs);
+}

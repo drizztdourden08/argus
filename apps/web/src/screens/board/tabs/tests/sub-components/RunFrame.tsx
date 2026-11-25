@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Text } from '@drizztdourden08/tessera';
+import { Flex, Text } from '@drizztdourden08/tessera';
 import { Age, AssigneeMark, RecordFrame, ShownCode } from '../../../../../shell';
 import { useTestsShared } from '../behavior/useTestsShared';
 import { RUN_KIND } from '../tests.constants';
@@ -22,11 +22,11 @@ const RunFrame = (props: RunFrameProps) => {
       code={<Text font="title" tone={muted ? 'muted' : undefined} className="run-card__tag"><ShownCode id={item.id} /></Text>}
       title={title && <Text smartTimes clamp={1} tone={muted ? 'muted' : 'dim'} className="run-card__title">{title}</Text>}
       content={(
-        <>
+        <Flex gap="xs" align="center">
           {signals}
           {item.updatedAt && <Text as="span" variant="caption" leading="16" tone="muted"><Age value={item.updatedAt} /></Text>}
           <AssigneeMark assignee={item.assignee ?? item.thread ?? ''} boardKey={boardKey} threads={threads} />
-        </>
+        </Flex>
       )}
       menu={menu}
     >
