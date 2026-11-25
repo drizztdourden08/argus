@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, expect, vi } from 'vitest';
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
+import { afterEach, vi } from 'vitest';
 import { renderAt } from '../helpers/render-at';
 import { seedBoard } from '../helpers/seed-board';
 import { liveStream } from '../helpers/wait-for-stream';
@@ -16,8 +16,6 @@ interface Board {
 }
 
 const NOW = new Date().toISOString();
-
-const COLD_START_MS = 5000;
 
 const thread = (id: string, over: Record<string, unknown> = {}): [string, object] => [
   id,
@@ -57,28 +55,18 @@ const mountBoard = async (board: Board, at = '/p/rotp/#agents') => {
   const fetchMock = vi.fn((_url: string, init?: RequestInit) => Promise.resolve(new Response(JSON.stringify(init?.method === 'POST' ? applied : report))));
   vi.stubGlobal('fetch', fetchMock);
   const view = renderAt(at);
-  const seed = { meta: { board: { project: 'rotp', name: 'Relic of the Past' } }, ...board };
-  let seeded = await liveStream(view.sources, 'rotp');
-  act(() => seedBoard(seeded, seed));
-  await waitFor(
-    () => {
-      const latest = [...view.sources].reverse().find((source) => !source.closed && source.scope === 'rotp');
-      if (latest && latest !== seeded) {
-        seeded = latest;
-        act(() => seedBoard(latest, seed));
-      }
-      expect(screen.queryByRole('button', { name: 'Board status' })).toBeTruthy();
-    },
-    { timeout: COLD_START_MS },
-  );
+  const stream = await liveStream(view.sources, 'rotp');
+  act(() => seedBoard(stream, { meta: { board: { project: 'rotp', name: 'Relic of the Past' } }, ...board }));
   return { ...view, fetchMock };
 };
+
+const COLD_START_MS = 5000;
 
 const drawerOf = async (): Promise<HTMLElement> => screen.findByRole('dialog', { name: 'Thread detail' });
 
 const clickChip = async (id: string): Promise<void> => {
   const name = `Open the thread ${id}`;
-  if (!screen.queryByRole('button', { name })) fireEvent.click(screen.getByRole('button', { name: 'Board status' }));
+  if (!screen.queryByRole('button', { name })) fireEvent.click(await screen.findByRole('button', { name: 'Board status' }, { timeout: COLD_START_MS }));
   fireEvent.click(await screen.findByRole('button', { name }));
 };
 
