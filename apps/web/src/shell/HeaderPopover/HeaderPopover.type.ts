@@ -4,6 +4,7 @@ import type { ReactNode, RefObject } from 'react';
 interface HeaderPopoverProps {
   trigger: ReactNode;
   label: string;
+  name?: string;
   hint?: string;
   children: ReactNode;
 }

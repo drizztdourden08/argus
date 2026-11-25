@@ -5,11 +5,11 @@ import type { HeaderPopoverProps } from './HeaderPopover.type';
 import './HeaderPopover.css';
 
 const HeaderPopover = (props: HeaderPopoverProps) => {
-  const { trigger, label, hint, children } = props;
+  const { trigger, label, name, hint, children } = props;
   const { anchor, open, toggle, close } = usePopover();
   return (
     <>
-      <Button ref={anchor} size="sm" variant="ghost" title={hint} aria-haspopup="dialog" aria-expanded={open} onClick={toggle}>
+      <Button ref={anchor} size="sm" variant="ghost" aria-label={name} title={hint} aria-haspopup="dialog" aria-expanded={open} onClick={toggle}>
         {trigger}
       </Button>
       {open ? (
