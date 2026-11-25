@@ -18,11 +18,11 @@ const useTabBadges = (boardKey: string, work: BoardWork): BoardBadges => {
   const prs = useCollection<PullRequest>(boardKey, 'prs');
   const load = useCallback(() => readBoardReleases(boardKey), [boardKey]);
   const releases = useRemoteRead(load, REMOTE_POLL_MS);
-  const toRun = useTestsBadge(boardKey);
+  const tests = useTestsBadge(boardKey);
   const now = useMinute();
   return useMemo(
-    () => boardBadges({ work, agents: agents.docs, launchers: launchers.docs, worktrees: worktrees.docs, prs: prs.docs, channels: releases.data ?? [], toRun, now }),
-    [work, agents.docs, launchers.docs, worktrees.docs, prs.docs, releases.data, toRun, now],
+    () => boardBadges({ work, agents: agents.docs, launchers: launchers.docs, worktrees: worktrees.docs, prs: prs.docs, channels: releases.data ?? [], tests, now }),
+    [work, agents.docs, launchers.docs, worktrees.docs, prs.docs, releases.data, tests, now],
   );
 };
 

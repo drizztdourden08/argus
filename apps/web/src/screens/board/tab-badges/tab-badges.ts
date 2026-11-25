@@ -49,7 +49,7 @@ const releasesBadge = (channels: readonly ReleaseChannel[]): Badge => {
   return { count: versions.length, tone: toneOf(versions.some((version) => version.replay?.state === 'pending'), 'warn') };
 };
 
-const testsBadge = (count: number): Badge => ({ count, tone: toneOf(count > 0, 'warn') });
+const testsBadge = (tests: { total: number; toRun: number }): Badge => ({ count: tests.total, tone: toneOf(tests.toRun > 0, 'warn') });
 
 const boardBadges = (input: {
   work: BoardWork;
@@ -58,13 +58,13 @@ const boardBadges = (input: {
   worktrees: readonly Worktree[];
   prs: readonly PullRequest[];
   channels: readonly ReleaseChannel[];
-  toRun: number;
+  tests: { total: number; toRun: number };
   now: number;
 }): BoardBadges => ({
   agents: agentsBadge(input.agents, input.now),
   activity: activityBadge(input.work),
   kanban: kanbanBadge(input.work),
-  tests: testsBadge(input.toRun),
+  tests: testsBadge(input.tests),
   builds: buildsBadge(input.launchers),
   worktrees: worktreesBadge(input.worktrees),
   changes: changesBadge(input.prs),
