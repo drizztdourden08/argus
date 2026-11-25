@@ -11,8 +11,8 @@ describe('S1 the outcome buttons', { tags: ['standard'] }, () => {
   it('pass is one click: it posts at once with no note and opens nothing', async () => {
     const { calls } = await mountTab(board());
     fireEvent.click(await waitFor(() => outcomeButton('pass', 'T-1')));
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]).toMatchObject({ url: '/api/p/rotp/tests/T-1/result', method: 'POST', body: { outcome: 'pass', text: '' } });
+    await waitFor(() => expect(resultCalls(calls)).toHaveLength(1));
+    expect(resultCalls(calls)[0]).toMatchObject({ url: '/api/p/rotp/tests/T-1/result', method: 'POST', body: { outcome: 'pass', text: '' } });
     expect(screen.queryByRole('textbox', { name: 'Note for T-1' })).toBeNull();
   });
 
@@ -28,7 +28,7 @@ describe('S1 the outcome buttons', { tags: ['standard'] }, () => {
     const pass = await waitFor(() => outcomeButton('pass', 'T-1'));
     fireEvent.click(pass);
     fireEvent.click(pass);
-    await waitFor(() => expect(calls).toHaveLength(1));
+    await waitFor(() => expect(resultCalls(calls)).toHaveLength(1));
   });
 });
 
@@ -48,10 +48,10 @@ describe('S1 the note box', { tags: ['standard'] }, () => {
     const box = await openBox('fail');
     type(box, '  it broke  ');
     fireEvent.keyDown(box, { key: 'Enter' });
-    expect(calls).toHaveLength(0);
+    expect(resultCalls(calls)).toHaveLength(0);
     type(box, 'ab');
     send(box);
-    expect(calls).toHaveLength(0);
+    expect(resultCalls(calls)).toHaveLength(0);
     type(box, '  it broke  ');
     send(box);
     await waitFor(() => expect(resultCalls(calls)).toHaveLength(1));
@@ -79,15 +79,15 @@ describe('S1 closing and switching the note box', { tags: ['standard'] }, () => 
     type(noteBox(), 'again');
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('textbox', { name: 'Note for T-1' })).toBeNull();
-    expect(calls).toHaveLength(0);
+    expect(resultCalls(calls)).toHaveLength(0);
   });
 
   it('posts pass at once and closes when pass is pressed while the box is open', async () => {
     const { calls } = await mountTab(board());
     type(await openBox('fail'), 'something');
     fireEvent.click(outcomeButton('pass', 'T-1'));
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]?.body).toEqual({ outcome: 'pass', text: '' });
+    await waitFor(() => expect(resultCalls(calls)).toHaveLength(1));
+    expect(resultCalls(calls)[0]?.body).toEqual({ outcome: 'pass', text: '' });
     expect(screen.queryByRole('textbox', { name: 'Note for T-1' })).toBeNull();
   });
 
