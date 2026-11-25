@@ -74,7 +74,9 @@ fn flag_of(body: &Value, name: &str) -> Result<bool, ApiError> {
     match &body[name] {
         Value::Null => Ok(false),
         Value::Bool(on) => Ok(*on),
-        _ => Err(ApiError::bad_request(format!("{name} must be true or false"))),
+        _ => Err(ApiError::bad_request(format!(
+            "{name} must be true or false"
+        ))),
     }
 }
 
