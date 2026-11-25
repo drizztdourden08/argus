@@ -63,7 +63,7 @@ describe('S1 Agents tab: the owner stop request', { tags: ['standard'] }, () => 
         'A-3': agent({ status: 'stop-requested' }),
       },
     });
-    expect(screen.getByText('working 1 \u00b7 waiting 1 \u00b7 stopping 1')).toBeTruthy();
+    for (const count of ['working 1', 'waiting 1', 'stopping 1']) expect(screen.getByText(count)).toBeTruthy();
   });
 
   it('reports a conflict from the board', async () => {
