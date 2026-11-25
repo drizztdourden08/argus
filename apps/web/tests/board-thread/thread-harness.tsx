@@ -60,13 +60,11 @@ const mountBoard = async (board: Board, at = '/p/rotp/#agents') => {
   return { ...view, fetchMock };
 };
 
-const COLD_START_MS = 5000;
-
 const drawerOf = async (): Promise<HTMLElement> => screen.findByRole('dialog', { name: 'Thread detail' });
 
 const clickChip = async (id: string): Promise<void> => {
   const name = `Open the thread ${id}`;
-  if (!screen.queryByRole('button', { name })) fireEvent.click(await screen.findByRole('button', { name: 'Board status' }, { timeout: COLD_START_MS }));
+  if (!screen.queryByRole('button', { name })) fireEvent.click(await screen.findByRole('button', { name: 'Board status' }));
   fireEvent.click(await screen.findByRole('button', { name }));
 };
 
