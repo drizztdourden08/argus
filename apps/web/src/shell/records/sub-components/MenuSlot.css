@@ -1,0 +1,6 @@
+/* @layer renderer-app @kind style */
+.menu-slot {
+  flex: none;
+  inline-size: var(--control-h-xs);
+  block-size: var(--control-h-xs);
+}

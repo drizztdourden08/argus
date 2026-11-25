@@ -8,6 +8,15 @@
   background: transparent;
 }
 
+.board-card-foot__meta {
+  flex: 1 1 0;
+  min-inline-size: 0;
+}
+
+.board-card-foot__send {
+  flex: none;
+}
+
 .board-progress__bar {
   flex: none;
   inline-size: var(--size-48);

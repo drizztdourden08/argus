@@ -5,7 +5,7 @@ import type { RecordRowProps } from '../record-rows.type';
 import { AssigneeMark } from './AssigneeMark';
 import { FrameCode } from './FrameCode';
 import { RecordFrame } from './RecordFrame';
-import { RecordMenu } from './RecordMenu';
+import { MenuSlot } from './MenuSlot';
 import { RecordTime } from './RecordTime';
 import { RowChips } from './RowChips';
 import { RowTitle } from './RowTitle';
@@ -34,7 +34,7 @@ const RecordRow = (props: RecordRowProps) => {
           <AssigneeMark assignee={head.assignee} boardKey={head.boardKey} threads={head.threads} />
         </Flex>
       }
-      menu={<RecordMenu groups={head.menu} label={head.menuLabel} />}
+      menu={<MenuSlot groups={head.menu} label={head.menuLabel} />}
       attrs={{ role: 'listitem', 'data-record': head.code }}
     >
       {body}

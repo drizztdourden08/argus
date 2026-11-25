@@ -13,12 +13,13 @@ const ActivityRow = (props: ActivityRowProps) => {
   const level = levelOf(item);
   const kind = kindOf(item);
   const project = item.project ?? '';
+  const target = recordOfText(item.text ?? '', project, kind);
   return (
     <OverviewRow
-      target={recordOfText(item.text ?? '', project, kind)}
+      target={target}
       assignee={leadOf(project)}
       title={item.text ?? ''}
-      chips={[{ id: 'kind', text: kind, title: `${kind} · ${level}` }]}
+      chips={target.code === kind ? [] : [{ id: 'kind', text: kind, title: `${kind} · ${level}` }]}
       trailing={
         <Flex gap="xs" align="center">
           <Text variant="caption" tone={LEVEL_TONE[level]}>{level}</Text>

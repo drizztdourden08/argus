@@ -16,7 +16,7 @@ const WaitingOnYou = (props: EntriesProps) => {
           density="row"
           icon={<TypeIcon kind={item.type} />}
           code={<FrameCode>{item.id}</FrameCode>}
-          title={<Text clamp={1}>{item.title}</Text>}
+          title={<Text title={item.title}>{item.title}</Text>}
           content={<ProjectLink project={board} />}
           attrs={{ role: 'listitem' }}
         >

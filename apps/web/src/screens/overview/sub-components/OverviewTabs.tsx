@@ -13,7 +13,7 @@ const OverviewTabs = (props: OverviewTabsProps) => {
       id: 'tabs',
       pinned: true,
       node: ({ tight }) => (
-        <Tabs tabs={tabs.map(withIcon)} activeTab={activeTab} onTabChange={onTabChange} hideZero={false} size="lg" selectedTone="neutral" badgeFill="solid" iconOnly={tight} />
+        <Tabs tabs={tabs.map(withIcon)} activeTab={activeTab} onTabChange={onTabChange} hideZero size="lg" selectedTone="neutral" badgeFill="solid" iconOnly={tight} />
       ),
     },
   ];

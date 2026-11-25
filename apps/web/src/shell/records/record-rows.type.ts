@@ -29,6 +29,7 @@ interface LinkedTitleProps {
   weight?: number;
   clamp?: number;
   label?: string;
+  className?: string;
 }
 
 interface RecordRowProps {

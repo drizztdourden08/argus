@@ -17,7 +17,7 @@ const RunningNow = (props: RunningNowProps) => {
           density="row"
           icon={<Tag {...GOOD_LOOK}>{run.status}</Tag>}
           code={<FrameCode>{run.id}</FrameCode>}
-          title={<Text clamp={1}>{run.name}</Text>}
+          title={<Text title={run.name}>{run.name}</Text>}
           content={
             <>
               <ProjectLink project={run.scope} hash="#agents" />
