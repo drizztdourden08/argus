@@ -23,10 +23,10 @@ const open = async (at: string) => {
 };
 
 describe('S1 the Tests tab on the board page', { tags: ['standard'] }, () => {
-  it('counts the tests to run in its badge', async () => {
+  it('counts the live tests in its badge', async () => {
     await open('/p/rotp/#tests');
     const tab = await screen.findByRole('tab', { name: /^Tests/ });
-    await waitFor(() => expect(tab.textContent).toContain('2'));
+    await waitFor(() => expect(tab.textContent).toContain('3'));
   });
 
   it('opens the pane of the test an old anchor names, whatever tab the board is on', async () => {

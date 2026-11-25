@@ -125,13 +125,14 @@ describe('I-85 the plan card and the plan group header', { tags: ['standard'] },
   it('heads the cases of a plan with the type mark, the code link, the title and the count', async () => {
     const { container } = await mountTab(board());
     await screen.findAllByText('Plan number 5');
-    const group = container.querySelector('[role="list"][aria-label="Cases of TP-5"]')?.closest('[role="group"]') as HTMLElement;
+    const list = container.querySelector('[role="list"][aria-label="Cases of TP-5"]');
+    const group = list?.closest('[role="group"]') as HTMLElement;
     const headEl = group.querySelector('.record-header') as HTMLElement;
     const inside = within(group);
     expect(group.querySelector('[data-type-mark]')).not.toBeNull();
     expect(inside.getAllByRole('link', { name: /TP-5/ }).length).toBeGreaterThan(0);
     expect(inside.getAllByText('Plan number 5').length).toBeGreaterThan(0);
-    expect(headEl.lastElementChild?.textContent).toBe('2');
+    expect(list?.closest('details')?.querySelector('.disclosure__end')?.textContent).toBe('2');
     expect(headEl.querySelector('[data-record]')).toBeNull();
   });
 });
