@@ -153,7 +153,7 @@ bearer when the token is required) and answer `read_only` in shadow mode.
 | `GET /releases/<project>/<channel>/<path>` | the update feed (below) |
 | `POST /api/p/<key>/prs` | opens a local pull request. Body `{ title, body?, head, base?, headCommit?, item?, by? }`; `base` is `main` by default. Answers `{ pr, outcome, seq }`, `pr` being the record. 400 with the board's sentence for a bad field, a head equal to the base, an unknown item or a second open pull request for the same head and base; 404 for a project with no board. |
 | `PATCH /api/p/<key>/prs/<PR-n>` | changes an open pull request. Body `{ action?, ... }`: `update` (the default) takes `headCommit`, `title`, `body`; `merge` takes `mergeCommit` (7 to 40 hex characters, required) and `mergedBy?`, and sets status `merged` and `mergedAt`; `close` sets status `closed`. `by?` names who acted (the page is always `human`; the default is `cli`). Answers as the POST; 404 for an unknown pull request, 400 for one that is not open. |
-| `POST /api/p/<key>/checks` | starts a check run. Body `{ commit?, pr?, check?, job?, trigger? }` (below). Answers `{ run: "R-n" }`. |
+| `POST /api/p/<key>/checks` | starts a check run. Body `{ commit?, pr?, check?, job?, trigger?, localpkg? }` (below). Answers `{ run: "R-n" }`. |
 
 A version is `{ version, tag, commit, title, publishedAt, notesUrl, assets: [{ name, size, kind,
 url }], packages: [{ name, version, size, url, sha256, sha512 }], replay }`, newest first by semver.
@@ -178,10 +178,11 @@ request and is named `check`; it is not on the board. Up to 8 check runs of a pr
 once (Brock queues them per repository); the time limit is 2 hours.
 
 The command line is `brock ci [<check>] [--commit <sha>] [--pr <PR-n>] [--job <job>] [--trigger
-<trigger>] --project <key>`. Every part is optional but the project and is checked to plain words
+<trigger>] [--localpkg] --project <key>`. Every part is optional but the project and is checked to plain words
 before it reaches the shell: `check` letters, digits, `-` and `_` (40 at most, no leading `-`),
 `commit` 7 to 40 hex characters, `pr` like `PR-3`, `job` one of `gate`, `upgrade`, `all`,
-`trigger` one of `push`, `pr`, `manual`, `release`. Anything else is a 400. `by?` names who asked
+`trigger` one of `push`, `pr`, `manual`, `release`, `localpkg` true or false (true adds
+`--localpkg`, so the run installs from the local registry). Anything else is a 400. `by?` names who asked
 (the run's `by`; the page is `human`).
 
 The program is `brock`; the `command` of the `checks` setting of `config.json` replaces it (typed

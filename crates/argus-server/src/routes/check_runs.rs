@@ -1,5 +1,5 @@
 //! Starting a check run (`docs/local-remote.md`): `POST /api/p/:key/checks {commit?, pr?, check?,
-//! job?, trigger?}` runs `brock ci` in the root of the project on the run engine (hidden, logs
+//! job?, trigger?, localpkg?}` runs `brock ci` in the root of the project on the run engine (hidden, logs
 //! kept, Stop and history are the run engine's) and answers `{run: "R-n"}`. When the run prints
 //! its first line, the path of Brock's record, the pair is kept and `GET /api/p/:key/checks`
 //! shows `run` on that record. The guard (`check_guard`) reads the tracked changes of the folders
@@ -47,6 +47,7 @@ struct Args {
     pr: Option<String>,
     job: Option<String>,
     trigger: Option<String>,
+    localpkg: bool,
 }
 
 fn text<'a>(body: &'a Value, name: &str) -> Result<Option<&'a str>, ApiError> {
@@ -66,6 +67,14 @@ fn one_of(body: &Value, name: &str, words: &[&str]) -> Result<Option<String>, Ap
             words.join(", ")
         ))),
         None => Ok(None),
+    }
+}
+
+fn flag_of(body: &Value, name: &str) -> Result<bool, ApiError> {
+    match &body[name] {
+        Value::Null => Ok(false),
+        Value::Bool(on) => Ok(*on),
+        _ => Err(ApiError::bad_request(format!("{name} must be true or false"))),
     }
 }
 
@@ -122,6 +131,7 @@ impl Args {
             pr: pr_of(body)?,
             job: one_of(body, "job", &JOBS)?,
             trigger: one_of(body, "trigger", &TRIGGERS)?,
+            localpkg: flag_of(body, "localpkg")?,
         })
     }
 
@@ -143,7 +153,7 @@ impl Args {
         Ok(self)
     }
 
-    /// `<program> ci [check] [--commit c] [--pr p] [--job j] [--trigger t] --project key`.
+    /// `<program> ci [check] [--commit c] [--pr p] [--job j] [--trigger t] [--localpkg] --project key`.
     fn command(&self, program: &str, project: &str) -> String {
         let mut words = vec![program.to_owned(), "ci".to_owned()];
         words.extend(self.check.clone());
@@ -156,6 +166,9 @@ impl Args {
             if let Some(value) = value {
                 words.extend([flag.to_owned(), value.clone()]);
             }
+        }
+        if self.localpkg {
+            words.push("--localpkg".to_owned());
         }
         words.extend(["--project".to_owned(), project.to_owned()]);
         words.join(" ")
@@ -414,4 +427,33 @@ async fn start(ctx: Ctx) -> Reply {
 /// Registers the check run route.
 pub fn register(r: &mut Router) {
     r.post("/api/p/:key/checks", start);
+}
+
+// test-tag: critical
+#[cfg(test)]
+mod tests {
+    //! K1: the `localpkg` flag of a check run reaches the `brock ci` command line.
+    use super::*;
+
+    #[test]
+    fn localpkg_true_adds_the_flag_before_the_project() {
+        let args = Args::parse(&json!({ "job": "gate", "localpkg": true })).expect("args");
+        assert_eq!(
+            args.command("brock", "alpha"),
+            "brock ci --job gate --localpkg --project alpha"
+        );
+    }
+
+    #[test]
+    fn localpkg_missing_or_false_leaves_the_command_as_it_was() {
+        for body in [json!({}), json!({ "localpkg": false })] {
+            let args = Args::parse(&body).expect("args");
+            assert_eq!(args.command("brock", "alpha"), "brock ci --project alpha");
+        }
+    }
+
+    #[test]
+    fn localpkg_that_is_not_a_bool_is_refused() {
+        assert!(Args::parse(&json!({ "localpkg": "yes" })).is_err());
+    }
 }
