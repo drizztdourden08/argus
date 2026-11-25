@@ -231,7 +231,6 @@ fn unknown_command(error: &clap::Error) -> Option<String> {
 
 /// Reports a command line that did not parse and answers its exit code: 0 for help and version,
 /// 2 for the rest.
-#[must_use]
 pub fn refuse<C: CommandFactory>(error: &clap::Error) -> ExitCode {
     let Some(name) = unknown_command(error) else {
         let _printed = error.print();

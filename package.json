@@ -29,10 +29,10 @@
     "postinstall": "node bin/argus.mjs --link"
   },
   "devDependencies": {
-    "@drizztdourden08/brock-build": "^0.119.0",
-    "@drizztdourden08/brock-lint-config": "^0.119.0",
-    "@drizztdourden08/brock-thread": "^0.119.0",
-    "@drizztdourden08/standards": "^0.14.7",
+    "@drizztdourden08/brock-build": "^0.123.0",
+    "@drizztdourden08/brock-lint-config": "^0.123.0",
+    "@drizztdourden08/brock-thread": "^0.123.0",
+    "@drizztdourden08/standards": "^0.15.0",
     "@resvg/resvg-js": "2.6.2",
     "jscpd": "catalog:",
     "knip": "catalog:",
