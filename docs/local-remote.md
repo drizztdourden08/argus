@@ -178,12 +178,12 @@ request and is named `check`; it is not on the board. Up to 8 check runs of a pr
 once (Brock queues them per repository); the time limit is 2 hours.
 
 The command line is `brock ci [<check>] [--commit <sha>] [--pr <PR-n>] [--job <job>] [--trigger
-<trigger>] [--localpkg] --project <key>`. Every part is optional but the project and is checked to plain words
-before it reaches the shell: `check` letters, digits, `-` and `_` (40 at most, no leading `-`),
+<trigger>] [--localpkg] --project <key>`. Every part is optional but the project and is checked
+to plain words before it reaches the shell: `check` letters, digits, `-` and `_` (40 at most, no leading `-`),
 `commit` 7 to 40 hex characters, `pr` like `PR-3`, `job` one of `gate`, `upgrade`, `all`,
 `trigger` one of `push`, `pr`, `manual`, `release`, `localpkg` true or false (true adds
-`--localpkg`, so the run installs from the local registry). Anything else is a 400. `by?` names who asked
-(the run's `by`; the page is `human`).
+`--localpkg`, so the run installs from the local registry). Anything else is a 400. `by?` names
+who asked (the run's `by`; the page is `human`).
 
 The program is `brock`; the `command` of the `checks` setting of `config.json` replaces it (typed
 as in a shell, for a Brock that is not on the PATH, and for tests: a fake script).
@@ -205,7 +205,7 @@ coord pr open "<title>" --head <branch> [--base main] [--item <I-n>] [--body "<t
 coord pr list [--status open|merged|closed] [--json]
 coord pr merge <PR-n>
 coord pr close <PR-n>
-coord check [<check>] [--commit <sha>] [--pr <PR-n>] [--job gate|upgrade|all] [--trigger push|pr|manual|release]
+coord check [<check>] [--commit <sha>] [--pr <PR-n>] [--job gate|upgrade|all] [--trigger push|pr|manual|release] [--localpkg]
 ```
 
 - `pr open` applies `pr-open` as the caller. The head commit is `--commit`, else what
@@ -230,8 +230,9 @@ coord check [<check>] [--commit <sha>] [--pr <PR-n>] [--job gate|upgrade|all] [-
   stdout) as `coord: <reason>`. A Brock that exits 0 without a commit is `brock merged but did not
   print a merge commit (it printed "<line>").`. On Windows Brock is started through `cmd /d /c`.
 - `pr close` applies `pr-close`: `PR-3 closed`.
-- `check` with a word or any of `--commit`, `--pr`, `--job`, `--trigger` posts to `POST
-  /api/p/<project>/checks` with `by` the caller, then waits up to 30 seconds for the record and
+- `check` with a word or any of `--commit`, `--pr`, `--job`, `--trigger`, `--localpkg` posts to
+  `POST /api/p/<project>/checks` with `by` the caller (`--localpkg` as `localpkg: true`; it is a
+  bare flag, so the check word goes before it), then waits up to 30 seconds for the record and
   prints `R-5 C-9 check started`, or `R-5 check started (no record: <why>; coord run logs R-5
   shows the output)`. `coord check` with none of them is the board checker it always was
   (`coord check [--stale <minutes>] [--json]`).

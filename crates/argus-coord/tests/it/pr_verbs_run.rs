@@ -262,3 +262,26 @@ async fn check_starts_a_run_and_prints_its_run_and_record() {
     );
     rig.stop().await;
 }
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
+async fn check_with_localpkg_passes_the_flag_to_brock_ci() {
+    let (rig, _dirs) = check_rig(seed).await;
+    let ran = rig.run(&["check", "--commit", SHA, "--localpkg", "--project", "alpha"]);
+    assert_eq!(ok(&ran).trim(), "R-1 C-1 check started");
+    let run = rig.t.get("/api/p/alpha/runs/R-1").await.json()["run"].clone();
+    let command = run["cmd"].as_str().unwrap_or_default();
+    assert!(
+        command.contains("--localpkg --project alpha"),
+        "brock got {command}"
+    );
+    let alone = rig.run(&["check", "--localpkg", "--project", "alpha"]);
+    assert_eq!(
+        ok(&alone).trim(),
+        "R-2 C-2 check started",
+        "--localpkg alone asks for a run"
+    );
+    let swallowed = rig.run(&["check", "--localpkg", "gate", "--project", "alpha"]);
+    refused(&swallowed, 1, "--localpkg takes no value");
+    rig.stop().await;
+}

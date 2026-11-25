@@ -64,7 +64,7 @@ Lead side (the same verbs work on every thread's records; --for <T> creates or l
   coord inbox send <thread> "<text>" | list --for <T> | rm <m-id>|--all --for <T>    coord answer <entry-id> "<text>" [--decision]   (inbox send: a thread of THIS board)
   coord tick                                     coord tick woke <thread>...      (manual check, never scheduled: wake + attention, JSON)
   coord check [--stale <minutes>] [--json]
-  coord check [<check>] [--commit <sha>] [--pr <PR-n>] [--job gate|upgrade|all] [--trigger push|pr|manual|release]     (with a word or any option: starts a check run (brock ci) on the dashboard's run engine; prints: R-5 C-9 check started; without them it is the board checker above)
+  coord check [<check>] [--commit <sha>] [--pr <PR-n>] [--job gate|upgrade|all] [--trigger push|pr|manual|release] [--localpkg]     (with a word or any option: starts a check run (brock ci) on the dashboard's run engine; prints: R-5 C-9 check started; without them it is the board checker above)
   coord pr open "<title>" --head <branch> [--base main] [--item <I-n>] [--body "<text>"] [--commit <sha>]    coord pr list [--status open|merged|closed] [--json]    coord pr merge <PR-n>    coord pr close <PR-n>     (local pull requests, the board's PR-n records; merge runs: brock pr merge --local)
   coord sync import <dir>                        (replay saved owner entries, offline)
   coord run define <name> --cmd "<command>" [--cwd d] [--kind build|test|launch|task] [--hand] [--visible] [--timeout s] [--parallel n] [--env K=V]...

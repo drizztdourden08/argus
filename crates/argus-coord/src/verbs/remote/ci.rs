@@ -1,5 +1,5 @@
 //! `coord check [<check>] [--commit <sha>] [--pr PR-n] [--job gate|upgrade|all]
-//! [--trigger push|pr|manual|release]`: starts a check run (`brock ci`) on the run engine of the
+//! [--trigger push|pr|manual|release] [--localpkg]`: starts a check run (`brock ci`) on the run engine of the
 //! dashboard and prints its run `R-n` and, once Brock has written the record, its check `C-n`.
 //! `coord check` with none of those is the board checker (`coord check [--stale] [--json]`).
 
@@ -18,12 +18,15 @@ use crate::verbs::thread::run_check;
 
 /// The options that ask for a check run.
 const ASKS: [&str; 4] = ["commit", "pr", "job", "trigger"];
+/// The flag that has `brock ci` install from the local registry.
+const LOCALPKG: &str = "localpkg";
 /// How long the record of a started run is waited for.
 const LINK_WAIT: Duration = Duration::from_secs(30);
 const POLL: Duration = Duration::from_millis(250);
 
 fn asks_for_a_run(call: &Call<'_>) -> bool {
-    !call.positional.is_empty() || ASKS.iter().any(|o| call.options.get(o).is_some())
+    let asked = |o: &str| call.options.get(o).is_some();
+    !call.positional.is_empty() || ASKS.iter().any(|o| asked(o)) || asked(LOCALPKG)
 }
 
 /// The head commit the board records for a pull request; nothing when the board or the pull
@@ -32,6 +35,18 @@ fn head_of_pr(call: &Call<'_>, pr: &str) -> Option<String> {
     let board = read_board(&coord_home(call), project_of(call)).ok()??;
     let commit = doc(&board, "prs", pr)?["headCommit"].as_str()?;
     (!commit.is_empty()).then(|| commit.to_owned())
+}
+
+/// `--localpkg` is a bare flag; `--localpkg=false` turns it off. A word after it would be taken
+/// as its value, so that is refused rather than lost.
+fn localpkg_of(call: &Call<'_>) -> Result<bool, CoordError> {
+    match call.options.text(LOCALPKG) {
+        None | Some("true") => Ok(true),
+        Some("false") => Ok(false),
+        Some(_) => Err(CoordError::refuse(
+            "--localpkg takes no value: put the check word before it.",
+        )),
+    }
 }
 
 /// The request: the check word and the options typed, each a text.
@@ -47,6 +62,9 @@ fn body_of(call: &Call<'_>) -> Result<Value, CoordError> {
             };
             body[name] = json!(value);
         }
+    }
+    if call.options.get(LOCALPKG).is_some() {
+        body[LOCALPKG] = json!(localpkg_of(call)?);
     }
     if let (Some(pr), None) = (body["pr"].as_str(), body["commit"].as_str()) {
         // `--pr PR-n` alone checks the commit the pull request records, the one `coord pr merge`
