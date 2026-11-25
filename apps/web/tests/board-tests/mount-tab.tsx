@@ -60,11 +60,13 @@ const bodyOf = (init: RequestInit | undefined): unknown => {
   return init?.body ? 'blob' : null;
 };
 
+const BOARDS_LIST = '/api/boards';
+
 const stubFetch = (respond: Responder | undefined): Call[] => {
   const calls: Call[] = [];
   vi.stubGlobal('fetch', (url: string, init?: RequestInit) => {
     const call: Call = { url, method: init?.method ?? 'GET', body: bodyOf(init) };
-    calls.push(call);
+    if (url !== BOARDS_LIST) calls.push(call);
     const reply = respond?.(call) ?? defaultReply(call);
     return Promise.resolve(new Response(JSON.stringify(reply.body), { status: reply.status, headers: { 'Content-Type': 'application/json' } }));
   });
