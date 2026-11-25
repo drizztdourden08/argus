@@ -1,7 +1,13 @@
 /* @layer renderer-app @kind types */
 import type { ChatTranscriptMessage, ChatTranscriptRole } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
-import type { ActionState, OverlordAction, OverlordApproval, OverlordMode, OverlordSpend, OverlordStatus } from '../../data/overlord';
+import type { ActionState, OverlordAction, OverlordApproval, OverlordMode, OverlordSpend, OverlordStatus, TranscriptLine } from '../../data/overlord';
+
+interface OverlordFeedApi {
+  status: OverlordStatus | null;
+  lines: TranscriptLine[];
+  problem: string | null;
+}
 
 type TalkKind = 'assistant' | 'owner' | 'wake' | 'rule' | 'thinking' | 'turn' | 'approval';
 
@@ -129,4 +135,4 @@ interface ModeSectionProps {
   onSwitch: (mode: OverlordMode) => void;
 }
 
-export type { ApprovalStripProps, ModeSectionProps, SpendSectionProps, StatusSectionProps, ChatBoxProps, ChatFeedProps,ContentBlock, DraftBlock, LiveDraft, MessageBodyProps, PendingSend, Piece, StepContentProps, TalkKind, TalkRow, ToolItem, ToolLineProps, ToolStatus, ToolsGroupProps, ToolsRow, TranscriptRow, WorkingActivity, WorkingLineProps };
+export type { OverlordFeedApi, ApprovalStripProps, ModeSectionProps, SpendSectionProps, StatusSectionProps, ChatBoxProps, ChatFeedProps, ContentBlock, DraftBlock, LiveDraft, MessageBodyProps, PendingSend, Piece, StepContentProps, TalkKind, TalkRow, ToolItem, ToolLineProps, ToolStatus, ToolsGroupProps, ToolsRow, TranscriptRow, WorkingActivity, WorkingLineProps };

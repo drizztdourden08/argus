@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind logic */
 import { useMemo, useRef, useState } from 'react';
-import { STATUS_POLL_MS, readStatus, sendMessage, useAction, useOverlordTranscript } from '../../../data/overlord';
-import { useRemoteRead } from '../../../data/remote';
+import { sendMessage, useAction } from '../../../data/overlord';
 import type { PendingSend } from '../OverlordChat.type';
+import { useOverlordFeed } from './useOverlordFeed';
 import { isRunning } from './is-running';
 import { overlordNote } from './overlord-note';
 import { liveDraft } from './live-draft';
@@ -14,8 +14,8 @@ import { toMessages } from './to-messages';
 import { toRows } from './to-rows';
 
 const useChatFeed = (held: readonly string[], reload: () => void) => {
-  const status = useRemoteRead(readStatus, STATUS_POLL_MS);
-  const feed = useOverlordTranscript(status.data?.sessionId ?? null);
+  const feed = useOverlordFeed();
+  const { status } = feed;
   const chat = useAction(reload);
   const [pending, setPending] = useState<PendingSend[]>([]);
   const next = useRef(0);
@@ -38,9 +38,9 @@ const useChatFeed = (held: readonly string[], reload: () => void) => {
     messages,
     queued: queuedMessages(held, visible),
     problem: feed.problem,
-    working: status.data?.status === 'turn' ? workingActivity(rows, draft) : null,
-    running: isRunning(status.data?.status),
-    note: overlordNote(status.data),
+    working: status?.status === 'turn' ? workingActivity(rows, draft) : null,
+    running: isRunning(status?.status),
+    note: overlordNote(status),
     action: chat,
     onSend,
   };
