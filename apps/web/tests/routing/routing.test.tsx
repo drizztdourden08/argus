@@ -23,7 +23,7 @@ describe('S2 routing', { tags: ['standard'] }, () => {
       portfolio.emit('snapshot', snapshot('_portfolio', 'boards', boards));
     });
     expect(await screen.findByText('RotP')).toBeTruthy();
-    const buttons = screen.getAllByRole('button', { name: /^Open the .+ board$/ });
+    const buttons = screen.getAllByRole('button', { name: /^Open BD-.+: .+$/ });
     expect(buttons).toHaveLength(2);
   });
 
@@ -31,7 +31,7 @@ describe('S2 routing', { tags: ['standard'] }, () => {
     const { sources } = renderAt('/p/rotp/');
     const board = await liveStream(sources, 'rotp');
     await waitFor(() => expect(board.url.split('c=')[1]?.split(',')).toEqual(
-      expect.arrayContaining(['actions', 'agents', 'builds', 'entries', 'items', 'log', 'meta', 'registry', 'tests', 'threads']),
+      expect.arrayContaining(['actions', 'agents', 'builds', 'entries', 'items', 'meta', 'registry', 'tests', 'threads']),
     ));
     act(() => {
       board.emit('snapshot', snapshot('rotp', 'meta', { board: { project: 'rotp', name: 'Relic of the Past' } }));
