@@ -4,7 +4,7 @@ import { CardTitle } from './CardTitle';
 import { RecordHead } from './RecordHead';
 
 const RecordCard = (props: RecordCardProps) => {
-  const { head, title, openLabel, onOpen, clamp = 1, time, compact, signals, foot, attrs, onClickCapture, defaultOpen = true, content, ...look } = props;
+  const { head, title, openLabel, onOpen, clamp = 1, time, compact, signals, foot, keepFoot = false, attrs, onClickCapture, defaultOpen = true, content, ...look } = props;
   const parts = { title, board: head.boardKey, label: openLabel, onOpen };
   return (
     <RecordHead
@@ -19,7 +19,7 @@ const RecordCard = (props: RecordCardProps) => {
       onClickCapture={onClickCapture}
     >
       {compact ? undefined : signals}
-      {compact ? undefined : foot}
+      {compact && !keepFoot ? undefined : foot}
     </RecordHead>
   );
 };

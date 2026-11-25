@@ -158,6 +158,7 @@ interface RecordCardProps {
   chevronOnIcon?: boolean;
   signals?: ReactNode;
   foot?: ReactNode;
+  keepFoot?: boolean;
   attrs?: Readonly<Record<string, string>>;
   onClickCapture?: (event: MouseEvent) => void;
   defaultOpen?: boolean;

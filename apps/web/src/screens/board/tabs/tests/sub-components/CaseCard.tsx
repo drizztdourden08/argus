@@ -29,6 +29,7 @@ const CaseCard = (props: TestPartProps) => {
       chevronOnIcon
       menuOnHover
       signals={chips}
+      keepFoot
       attrs={{ 'data-swap-item': '', 'data-test': test.id, ...(toRun ? { 'data-to-run': '' } : {}) }}
       onKeyDown={rowKeys(toRun, controls)}
       foot={(
