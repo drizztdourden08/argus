@@ -76,7 +76,7 @@ describe('S1 the filters of the Activity tab', { tags: ['standard'] }, () => {
     await open();
     await screen.findByText(/play failed \(exit 1\)/);
     expect(screen.getByRole('radio', { name: 'All kinds 3' }).getAttribute('aria-checked')).toBe('true');
-    expect(screen.getByRole('radio', { name: 'kill 0' })).toBeTruthy();
+    expect(screen.queryByRole('radio', { name: 'kill 0' })).toBeNull();
     fireEvent.click(screen.getByRole('radio', { name: 'fault 1' }));
     await waitFor(() => expect(rowsOf()).toHaveLength(1));
     expect(rowsOf()[0]?.textContent).toContain('its wake listener is not running');

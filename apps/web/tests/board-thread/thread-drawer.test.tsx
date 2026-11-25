@@ -18,16 +18,12 @@ describe('S1 opening the thread drawer', { tags: ['standard'] }, () => {
     expect(within(brief).getByText('code').tagName).toBe('CODE');
   });
 
-  it('a chat of the Agents list opens it, and so does the note of the lead', async () => {
-    await mountBoard({ threads: docs(worker(), thread('lead', { role: 'lead', note: 'Planning the week' })) });
-    fireEvent.click(await screen.findByText('worker', { selector: '[data-chat-id] *' }));
-    expect(within(await drawerOf()).getByRole('heading', { name: 'worker session' })).toBeTruthy();
+  it('a chip of the lead opens it too, once the worker drawer is closed', async () => {
+    await mountBoard({ threads: docs(worker(), thread('lead', { role: 'lead' })), registry: docs(chip('worker'), chip('lead', { role: 'lead' })) });
+    expect(within(await openChip('worker')).getByRole('heading', { name: 'worker session' })).toBeTruthy();
     fireEvent.click(within(await drawerOf()).getAllByRole('button', { name: /Close/ })[0] as HTMLElement);
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Thread detail' })).toBeNull());
-    fireEvent.click(await screen.findByRole('button', { name: 'Planning the week' }));
-    const dialog = within(await drawerOf());
-    expect(dialog.getByRole('heading', { name: 'lead session' })).toBeTruthy();
-    expect(dialog.getByText('coord')).toBeTruthy();
+    expect(within(await openChip('lead')).getByRole('heading', { name: 'lead session' })).toBeTruthy();
   });
 });
 

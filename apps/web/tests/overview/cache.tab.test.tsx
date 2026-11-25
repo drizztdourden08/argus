@@ -49,6 +49,7 @@ const serve = (report: CacheReport = REPORT, prune: { status?: number; body?: un
   stubApi((call) => {
     if (call.path === '/api/cache') return { body: report };
     if (call.path === '/api/cache/prune') return prune;
+    if (call.path === '/api/registry') return { body: { builds: [], consumers: [], scopeRedirected: false } };
     return undefined;
   });
 
