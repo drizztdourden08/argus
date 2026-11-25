@@ -47,14 +47,14 @@ describe('S1 the order and the folds of run cards', { tags: ['standard'] }, () =
 });
 
 describe('S1 the sections of a run card', { tags: ['standard'] }, () => {
-  it('take a test in live: a change moves it from To run to Done', async () => {
+  it('take a test in live: a change moves it from To run to Done, and the empty To run leaves', async () => {
     const { change } = await mountTab(board([runOn('I-50', null, { assignee: 'owner' })], [testDoc('T-1')], ['T-1']));
     const toRun = await screen.findByRole('group', { name: 'To run' });
     expect(within(toRun).getByText('Test number 1')).toBeTruthy();
     change('tests', 'T-1', doneDoc('T-1', 'pass', 'ok'));
     const done = await screen.findByRole('group', { name: 'Done' });
     expect(within(done).getByText('Test number 1')).toBeTruthy();
-    expect(within(screen.getByRole('group', { name: 'To run' })).getByText('Nothing left to run.')).toBeTruthy();
+    expect(screen.queryByRole('group', { name: 'To run' })).toBeNull();
   });
 
   it('fold more than five done tests to the newest, with a toggle for all', async () => {
