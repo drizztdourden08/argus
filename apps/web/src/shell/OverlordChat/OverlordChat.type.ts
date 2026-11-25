@@ -85,6 +85,7 @@ interface PendingSend {
 
 interface ChatBoxProps {
   running: boolean;
+  bar: ReactNode;
   note: string;
   action: ActionState;
   onSend: (text: string) => Promise<boolean>;

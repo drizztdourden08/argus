@@ -5,7 +5,7 @@ import { CHAT_LABEL, CHAT_PLACEHOLDER } from '../OverlordChat.constants';
 import type { ChatBoxProps } from '../OverlordChat.type';
 
 const ChatBox = (props: ChatBoxProps) => {
-  const { running, note, action, onSend } = props;
+  const { running, note, action, bar, onSend } = props;
   const [text, setText] = useState('');
   const send = (value: string) => {
     void onSend(value).then((sent) => sent && setText(''));
@@ -21,6 +21,7 @@ const ChatBox = (props: ChatBoxProps) => {
         disabled={!running}
         busy={action.busy}
         placeholder={CHAT_PLACEHOLDER}
+        bar={bar}
       />
       {action.problem && <Callout tone="danger">{action.problem}</Callout>}
     </Stack>

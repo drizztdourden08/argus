@@ -39,7 +39,8 @@ interface ChatUsage {
 }
 
 interface ChatBarProps {
-  working: boolean;
+  chat: ChatSettings;
+  usage: ChatUsage;
 }
 
 interface UsageRingProps {
