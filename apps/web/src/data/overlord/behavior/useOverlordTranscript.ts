@@ -20,7 +20,7 @@ const useOverlordTranscript = (sessionId: string | null): TranscriptFeed => {
     readTranscript(0).then(
       (page) => {
         if (!live) return;
-        setLines(page.lines.map((event, at) => ({ index: at + 1, event })));
+        setLines((page.lines ?? []).map((event, at) => ({ index: at + 1, event })));
         setProblem(null);
         if (page.session) close = openLineStream(page.session, page.next, appendTo(setLines));
       },

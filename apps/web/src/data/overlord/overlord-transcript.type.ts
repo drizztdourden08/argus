@@ -33,7 +33,7 @@ interface TranscriptLine {
 
 interface TranscriptPage {
   session: string | null;
-  lines: (TranscriptEvent | string)[];
+  lines?: (TranscriptEvent | string)[];
   next: number;
 }
 

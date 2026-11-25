@@ -50,10 +50,8 @@ describe('K1 the filters', { tags: ['critical'] }, () => {
     expect(filterActivity(rows, { level: 'warn', kind: 'note' })).toEqual([]);
   });
 
-  it('lists the known kinds with their counts, then the kinds the feed carries that are new', () => {
+  it('lists the known kinds the feed carries first, then the new ones, and leaves out kinds with no entry', () => {
     const counts = kindCounts([entry('1', { kind: 'mystery' }), entry('2', { kind: 'fault' }), entry('3', { kind: 'fault' })]);
-    expect(counts.map(([kind]) => kind)).toEqual(['fault', 'process', 'kill', 'close', 'run', 'wake', 'error', 'note', 'mystery']);
-    expect(counts[0]).toEqual(['fault', 2]);
-    expect(counts[8]).toEqual(['mystery', 1]);
+    expect(counts).toEqual([['fault', 2], ['mystery', 1]]);
   });
 });
