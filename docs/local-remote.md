@@ -182,7 +182,8 @@ The command line is `brock ci [<check>] [--commit <sha>] [--pr <PR-n>] [--job <j
 to plain words before it reaches the shell: `check` letters, digits, `-` and `_` (40 at most, no leading `-`),
 `commit` 7 to 40 hex characters, `pr` like `PR-3`, `job` one of `gate`, `upgrade`, `all`,
 `trigger` one of `push`, `pr`, `manual`, `release`, `localpkg` true or false (true adds
-`--localpkg`, so the run installs from the local registry). Anything else is a 400. `by?` names
+`--localpkg`, so the run installs from the local registry; every run gets `LOCALPKG_BIN`, the
+`script` of the `localpkg` setting below). Anything else is a 400. `by?` names
 who asked (the run's `by`; the page is `human`).
 
 The program is `brock`; the `command` of the `checks` setting of `config.json` replaces it (typed

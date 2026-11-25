@@ -10,7 +10,6 @@ use argus_records::checks::CheckStore;
 use argus_records::folder_watch::FolderWatch;
 use argus_records::registry::Registry;
 use argus_records::releases::ReleaseStore;
-use serde_json::Value;
 
 use crate::adapters::records::DbIds;
 use crate::{ServeOptions, Services};
@@ -81,23 +80,22 @@ fn localpkg_home(svc: &Services, opts: &RecordsOptions) -> PathBuf {
         .unwrap_or_else(|| svc.paths.coord_home.join("localpkg"))
 }
 
+/// One part of the `localpkg` setting of `config.json`, else `default`.
+fn localpkg_setting(svc: &Services, key: &str, default: &str) -> String {
+    let config = svc.config();
+    let set = config.extra.get("localpkg").and_then(|s| s[key].as_str());
+    set.filter(|s| !s.is_empty()).unwrap_or(default).to_owned()
+}
+
+/// The Overlord's `localpkg.mjs`: the `script` of the `localpkg` setting, else its default place.
+pub(crate) fn localpkg_script(svc: &Services) -> String {
+    localpkg_setting(svc, "script", DEFAULT_SCRIPT)
+}
+
 fn node_status(svc: &Services, home: &std::path::Path) -> Arc<dyn ConsumerStatus> {
-    let setting = svc
-        .config()
-        .extra
-        .get("localpkg")
-        .cloned()
-        .unwrap_or(Value::Null);
-    let text = |key: &str, default: &str| {
-        setting[key]
-            .as_str()
-            .filter(|s| !s.is_empty())
-            .unwrap_or(default)
-            .to_owned()
-    };
     Arc::new(NodeStatus {
-        node: text("node", "node"),
-        script: PathBuf::from(text("script", DEFAULT_SCRIPT)),
+        node: localpkg_setting(svc, "node", "node"),
+        script: PathBuf::from(localpkg_script(svc)),
         home: home.to_path_buf(),
     })
 }

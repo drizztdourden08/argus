@@ -28,6 +28,7 @@ use crate::adapters::check_links::{CheckLinks, run_id_of};
 use crate::adapters::runs::RunHost;
 use crate::reply::json_reply;
 use crate::router::Reply;
+use crate::services::records::localpkg_script;
 use crate::{AuthKind, Ctx, Router, Services};
 
 const NAME: &str = "check";
@@ -223,7 +224,9 @@ fn program_of(ctx: &Ctx) -> String {
     program.unwrap_or(PROGRAM).to_owned()
 }
 
-fn definition(cmd: String, root: String) -> RunDef {
+/// The run of `brock ci` in `root`. `LOCALPKG_BIN` names the Overlord's `localpkg.mjs`, which
+/// `brock ci --localpkg` installs with.
+fn definition(cmd: String, root: String, localpkg_bin: String) -> RunDef {
     RunDef {
         name: NAME.to_owned(),
         cmd,
@@ -233,6 +236,7 @@ fn definition(cmd: String, root: String) -> RunDef {
         parallel: PARALLEL,
         defined_by: "argus".to_owned(),
         defined_at: now_iso(),
+        env: [("LOCALPKG_BIN".to_owned(), localpkg_bin)].into(),
         ..RunDef::default()
     }
 }
@@ -416,7 +420,7 @@ async fn start(ctx: Ctx) -> Reply {
     let cwd = root_of(&ctx, &project)?;
     let dirs = watched(&cwd, project_root(&ctx, &project));
     let before = blocking(move || Before::take(dirs)).await?;
-    let def = definition(cmd, cwd);
+    let def = definition(cmd, cwd, localpkg_script(&ctx.svc));
     let started = runs
         .start_def(&project, &def, &options_of(&ctx, &body, &args))
         .map_err(|e| refusal(&e))?;
@@ -452,6 +456,19 @@ mod tests {
             let args = Args::parse(&body).expect("args");
             assert_eq!(args.command("brock", "alpha"), "brock ci --project alpha");
         }
+    }
+
+    #[test]
+    fn a_check_run_names_the_localpkg_tool_in_its_env() {
+        let def = definition(
+            "brock ci".to_owned(),
+            "X:/p".to_owned(),
+            "X:/t/l.mjs".to_owned(),
+        );
+        assert_eq!(
+            def.env.get("LOCALPKG_BIN").map(String::as_str),
+            Some("X:/t/l.mjs")
+        );
     }
 
     #[test]
