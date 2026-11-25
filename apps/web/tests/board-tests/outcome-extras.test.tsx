@@ -21,12 +21,13 @@ describe('S1 a screenshot with the note', { tags: ['standard'] }, () => {
     expect(screen.getByText('altar.png')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Remove the screenshot' })).toBeTruthy();
     send(box);
-    await waitFor(() => expect(calls).toHaveLength(2));
-    expect(calls[0]?.url).toBe('/api/p/rotp/tests/T-1/result');
-    const upload = new URL(calls[1]?.url ?? '', 'http://dashboard');
+    const posts = () => calls.filter((call) => call.method !== 'GET');
+    await waitFor(() => expect(posts()).toHaveLength(2));
+    expect(posts()[0]?.url).toBe('/api/p/rotp/tests/T-1/result');
+    const upload = new URL(posts()[1]?.url ?? '', 'http://dashboard');
     expect(upload.pathname).toBe('/api/p/rotp/tests/T-1/proofs');
     expect(upload.searchParams.get('caption')).toBe('the sage is gone');
-    expect(calls[1]?.body).toBe('blob');
+    expect(posts()[1]?.body).toBe('blob');
   });
 
   it('is taken away by the remove button', async () => {

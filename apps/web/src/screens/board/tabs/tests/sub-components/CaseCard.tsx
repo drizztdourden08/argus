@@ -13,19 +13,22 @@ const CaseCard = (props: TestPartProps) => {
   const view = useCaseHead(test);
   const { controls, toRun, head } = view;
   const { layout } = useTestsShared();
+  const compact = layout === 'compact';
   const chips = (
     <Flex gap="xs" wrap>
       {view.chips.map((chip) => <Tag key={chip.id} {...chip.look} title={chip.title}>{chip.code ? <ShownCode id={chip.text} board={head.boardKey} /> : chip.text}</Tag>)}
+      {compact && <CaseOutcome test={test} view={view} />}
     </Flex>
   );
-  return (
+  const composer = controls.open && <ResultComposer testId={test.id} outcome={controls.open} controls={controls} />;
+  const card = (
     <RecordCard
       head={head}
       title={view.title || test.id}
       openLabel={`Open ${test.id}: ${view.title || test.id}`}
       onOpen={view.open}
       time={view.time}
-      compact={layout === 'compact'}
+      compact={compact}
       chevronOnIcon
       menuOnHover
       signals={chips}
@@ -34,10 +37,17 @@ const CaseCard = (props: TestPartProps) => {
       foot={(
         <Flex direction="column" gap="xs">
           <CaseOutcome test={test} view={view} />
-          {controls.open && <ResultComposer testId={test.id} outcome={controls.open} controls={controls} />}
+          {composer}
         </Flex>
       )}
     />
+  );
+  if (!compact) return card;
+  return (
+    <Flex direction="column" gap="xs">
+      {card}
+      {composer}
+    </Flex>
   );
 };
 
