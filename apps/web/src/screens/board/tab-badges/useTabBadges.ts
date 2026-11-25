@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind logic */
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { Agent } from '../../../data/agents';
 import { useCollection } from '../../../data/react';
-import type { Launcher } from '../../../data/types';
+import { readBoardReleases, REMOTE_POLL_MS, useRemoteRead } from '../../../data/remote';
+import type { Launcher, PullRequest } from '../../../data/types';
 import type { Worktree } from '../../../data/worktrees';
 import type { BoardWork } from '../feed-model';
 import { useTestsBadge } from '../tabs/tests/behavior/useTestsBadge';
@@ -14,11 +15,14 @@ const useTabBadges = (boardKey: string, work: BoardWork): BoardBadges => {
   const agents = useCollection<Agent>(boardKey, 'agents');
   const launchers = useCollection<Launcher>(boardKey, 'launchers');
   const worktrees = useCollection<Worktree>(boardKey, 'worktrees');
+  const prs = useCollection<PullRequest>(boardKey, 'prs');
+  const load = useCallback(() => readBoardReleases(boardKey), [boardKey]);
+  const releases = useRemoteRead(load, REMOTE_POLL_MS);
   const toRun = useTestsBadge(boardKey);
   const now = useMinute();
   return useMemo(
-    () => boardBadges({ work, agents: agents.docs, launchers: launchers.docs, worktrees: worktrees.docs, toRun, now }),
-    [work, agents.docs, launchers.docs, worktrees.docs, toRun, now],
+    () => boardBadges({ work, agents: agents.docs, launchers: launchers.docs, worktrees: worktrees.docs, prs: prs.docs, channels: releases.data ?? [], toRun, now }),
+    [work, agents.docs, launchers.docs, worktrees.docs, prs.docs, releases.data, toRun, now],
   );
 };
 

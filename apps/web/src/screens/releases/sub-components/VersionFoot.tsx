@@ -15,7 +15,7 @@ const VersionFoot = (props: VersionFootProps) => {
       {version.assets.length > 0 && <Tag title="App files in this version">{countText(version.assets.length, 'file')}</Tag>}
       {version.tag && version.tag !== `v${version.version}` && <Tag icon="tag" title="Git tag">{version.tag}</Tag>}
       {!compact && <Text variant="caption" tone="muted" title="Commit"><Text variant="caption" tone="dim" mono>{shortCommit(version.commit)}</Text></Text>}
-      {!compact && version.notesUrl && <Link href={version.notesUrl} title="Open the release notes">Release notes</Link>}
+      {!compact && version.notesUrl && <Text as="span" variant="caption"><Link href={version.notesUrl} title="Open the release notes">Release notes</Link></Text>}
       <ReplayTag replay={version.replay} />
     </Flex>
   );

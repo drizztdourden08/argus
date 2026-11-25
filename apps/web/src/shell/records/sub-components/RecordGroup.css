@@ -1,0 +1,4 @@
+/* @layer renderer-app @kind style */
+.record-group__head {
+  padding: var(--space-xs) var(--space-sm);
+}

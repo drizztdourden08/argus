@@ -7,7 +7,17 @@
 }
 
 .tab-well__row {
+  position: relative;
   min-inline-size: 0;
+}
+
+.tab-well__row::after {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline: 0;
+  border-block-end: var(--border-width-thin) solid var(--c-border);
+  content: '';
+  pointer-events: none;
 }
 
 .tab-well__tabs {
