@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-libra
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderAt } from '../helpers/render-at';
 import { snapshot } from '../helpers/snapshot';
-import { waitForStream } from '../helpers/wait-for-stream';
+import { liveStream } from '../helpers/wait-for-stream';
 
 afterEach(cleanup);
 
@@ -16,13 +16,11 @@ const boards = Object.fromEntries(Object.keys(cards).map((key) => [`BD-${key}`, 
 describe('S2 routing', { tags: ['standard'] }, () => {
   it('shows the overview at / with the projects from the cards stream', async () => {
     const { sources } = renderAt('/');
-    await waitForStream(sources);
-    const wanted = sources[0]?.url.split('?c=')[1]?.split(',') ?? [];
-    expect(sources[0]?.url.startsWith('/api/p/_portfolio/stream?c=')).toBe(true);
-    expect(wanted).toContain('cards');
+    const portfolio = await liveStream(sources, '_portfolio');
+    expect(portfolio.url.split('?c=')[1]?.split(',') ?? []).toContain('cards');
     act(() => {
-      sources[0]?.emit('snapshot', snapshot('_portfolio', 'cards', cards));
-      sources[0]?.emit('snapshot', snapshot('_portfolio', 'boards', boards));
+      portfolio.emit('snapshot', snapshot('_portfolio', 'cards', cards));
+      portfolio.emit('snapshot', snapshot('_portfolio', 'boards', boards));
     });
     expect(await screen.findByText('RotP')).toBeTruthy();
     const buttons = screen.getAllByRole('button', { name: /^Open the .+ board$/ });
@@ -31,14 +29,13 @@ describe('S2 routing', { tags: ['standard'] }, () => {
 
   it('shows the board page at /p/:key/ with the registered strip', async () => {
     const { sources } = renderAt('/p/rotp/');
-    await waitForStream(sources);
-    expect(sources[0]?.url.startsWith('/api/p/rotp/stream?c=')).toBe(true);
-    expect(sources[0]?.url.split('c=')[1]?.split(',')).toEqual(
+    const board = await liveStream(sources, 'rotp');
+    await waitFor(() => expect(board.url.split('c=')[1]?.split(',')).toEqual(
       expect.arrayContaining(['actions', 'agents', 'builds', 'entries', 'items', 'log', 'meta', 'registry', 'tests', 'threads']),
-    );
+    ));
     act(() => {
-      sources[0]?.emit('snapshot', snapshot('rotp', 'meta', { board: { project: 'rotp', name: 'Relic of the Past' } }));
-      sources[0]?.emit('snapshot', snapshot('rotp', 'registry', {
+      board.emit('snapshot', snapshot('rotp', 'meta', { board: { project: 'rotp', name: 'Relic of the Past' } }));
+      board.emit('snapshot', snapshot('rotp', 'registry', {
         lead: { id: 'lead', project: 'rotp', thread: 'lead', session: 'lead', role: 'lead', state: 'listening' },
       }));
     });
