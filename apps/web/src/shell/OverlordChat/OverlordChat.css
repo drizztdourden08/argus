@@ -35,6 +35,11 @@
   white-space: nowrap;
 }
 
+.overlord-chat__bar {
+  min-inline-size: 0;
+  padding-inline: calc(var(--space-md) + var(--border-width-thin) - var(--control-pad-sm));
+}
+
 .overlord-chat__ring {
   inline-size: var(--size-16);
   block-size: var(--size-16);

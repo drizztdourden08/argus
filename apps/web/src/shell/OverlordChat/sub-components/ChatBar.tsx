@@ -9,9 +9,9 @@ const ChatBar = (props: ChatBarProps) => {
   const { chat, usage } = props;
   return (
     <>
-      {chat.busy && <Spinner size="sm" label={SWITCHING_NOTE} />}
       <SettingChips chat={chat} />
       <UsageRing usage={usage} />
+      {chat.busy && <Spinner size="sm" label={SWITCHING_NOTE} />}
     </>
   );
 };
