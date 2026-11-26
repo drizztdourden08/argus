@@ -6,13 +6,16 @@ use serde::{Deserialize, Serialize};
 use crate::rules::{View, pick_target};
 use crate::types::{Account, AccountKey};
 
-/// The switch the owner planned.
+/// The switch the owner planned. Each end is his own pick or left to Argus; a plan holds at
+/// least one end.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NextPlan {
-    /// The account Desktop leaves.
-    pub from: AccountKey,
-    /// The account Desktop goes to.
-    pub to: AccountKey,
+    /// The account Desktop leaves. None: the account Desktop is on.
+    #[serde(default)]
+    pub from: Option<AccountKey>,
+    /// The account Desktop goes to. None: the account with the most room.
+    #[serde(default)]
+    pub to: Option<AccountKey>,
 }
 
 /// Where the shown switch comes from.
@@ -55,44 +58,52 @@ pub struct Next {
     pub source: Source,
     /// When it is expected.
     pub when: When,
+    /// The ends the owner picked himself, so the tab can tell them from the auto pick.
+    pub plan: Option<NextPlan>,
 }
 
-/// A plan from two keys, or the plain sentence that says why not.
+/// A plan from the keys the owner picked (one end or both), or the plain sentence that says
+/// why not.
 ///
 /// # Errors
-/// When the keys are equal, one is unknown, or `to` cannot receive.
+/// When no end is picked, the keys are equal, one is unknown, or `to` cannot receive.
 pub fn check_plan(
     accounts: &[Account],
     views: &[View],
-    from: &str,
-    to: &str,
+    from: Option<&str>,
+    to: Option<&str>,
 ) -> Result<NextPlan, String> {
+    if from.is_none() && to.is_none() {
+        return Err("Pick at least one account.".to_owned());
+    }
     if from == to {
         return Err("Pick two different accounts.".to_owned());
     }
-    for key in [from, to] {
+    for key in [from, to].into_iter().flatten() {
         if !accounts.iter().any(|a| a.key == key) {
             return Err(format!("{key} is not a known account."));
         }
     }
-    if !views.iter().any(|v| v.key == to && v.can_receive) {
+    let receives = |key: &str| views.iter().any(|v| v.key == key && v.can_receive);
+    if let Some(to) = to.filter(|key| !receives(key)) {
         return Err(format!(
             "{to} cannot receive a switch: it is turned off for receiving or has no saved Desktop login."
         ));
     }
     Ok(NextPlan {
-        from: from.to_owned(),
-        to: to.to_owned(),
+        from: from.map(str::to_owned),
+        to: to.map(str::to_owned),
     })
 }
 
 /// The account the auto-switch goes to from `from`: the planned one when the plan leaves from
-/// `from` and it has room, else the one with the most room.
+/// `from` (or names no account to leave) and it has room, else the one with the most room.
 #[must_use]
 pub fn target<'a>(accounts: &'a [View], from: &str, plan: Option<&NextPlan>) -> Option<&'a View> {
     let planned = plan
-        .filter(|p| p.from == from)
-        .and_then(|p| accounts.iter().find(|v| v.key == p.to))
+        .filter(|p| p.from.as_deref().is_none_or(|key| key == from))
+        .and_then(|p| p.to.as_deref())
+        .and_then(|to| accounts.iter().find(|v| v.key == to))
         .filter(|v| v.key != from && v.has_room());
     planned.or_else(|| pick_target(accounts, from))
 }
@@ -130,15 +141,18 @@ pub fn next_of(
     burn: &dyn Fn(&str) -> Option<f64>,
     now_ms: i64,
 ) -> Next {
-    let (from, to, source) = plan.map_or_else(
-        || {
-            let to = active
-                .and_then(|a| pick_target(views, a))
-                .map(|v| v.key.clone());
-            (active.map(str::to_owned), to, Source::Auto)
-        },
-        |p| (Some(p.from.clone()), Some(p.to.clone()), Source::Owner),
-    );
+    let from = plan
+        .and_then(|p| p.from.clone())
+        .or_else(|| active.map(str::to_owned));
+    let to = plan.and_then(|p| p.to.clone()).or_else(|| {
+        let leaving = from.as_deref()?;
+        pick_target(views, leaving).map(|v| v.key.clone())
+    });
+    let source = if plan.is_some() {
+        Source::Owner
+    } else {
+        Source::Auto
+    };
     let leaving = from
         .as_deref()
         .and_then(|key| views.iter().find(|v| v.key == key));
@@ -148,6 +162,7 @@ pub fn next_of(
         from,
         to,
         source,
+        plan: plan.cloned(),
     }
 }
 
@@ -183,8 +198,8 @@ mod tests {
 
     fn plan(from: &str, to: &str) -> NextPlan {
         NextPlan {
-            from: from.to_owned(),
-            to: to.to_owned(),
+            from: Some(from.to_owned()),
+            to: Some(to.to_owned()),
         }
     }
 
@@ -197,10 +212,40 @@ mod tests {
         let accounts = [account("a"), account("b")];
         let views = [view("a", 10.0, true), view("b", 10.0, false)];
         let refuse = |from, to| check_plan(&accounts, &views, from, to).unwrap_err();
-        assert_eq!(refuse("a", "a"), "Pick two different accounts.");
-        assert_eq!(refuse("a", "z"), "z is not a known account.");
-        assert!(refuse("a", "b").starts_with("b cannot receive"));
-        assert_eq!(check_plan(&accounts, &views, "b", "a"), Ok(plan("b", "a")));
+        assert_eq!(refuse(None, None), "Pick at least one account.");
+        assert_eq!(refuse(Some("a"), Some("a")), "Pick two different accounts.");
+        assert_eq!(refuse(Some("a"), Some("z")), "z is not a known account.");
+        assert!(refuse(Some("a"), Some("b")).starts_with("b cannot receive"));
+        assert!(refuse(None, Some("b")).starts_with("b cannot receive"));
+        let both = check_plan(&accounts, &views, Some("b"), Some("a"));
+        assert_eq!(both, Ok(plan("b", "a")));
+    }
+
+    #[test]
+    fn a_plan_may_hold_one_end_only() {
+        let accounts = [account("a"), account("b"), account("c")];
+        let views = [
+            view("a", 90.0, true),
+            view("b", 50.0, true),
+            view("c", 5.0, true),
+        ];
+        let to_only = check_plan(&accounts, &views, None, Some("b")).unwrap();
+        assert_eq!(to_only.from, None);
+        assert_eq!(key_of(target(&views, "a", Some(&to_only))), Some("b"));
+        let shown = next_of(&views, Some("a"), Some(&to_only), &|_| None, 0);
+        assert_eq!(shown.source, Source::Owner);
+        assert_eq!(shown.from.as_deref(), Some("a"));
+        assert_eq!(shown.to.as_deref(), Some("b"));
+        assert_eq!(shown.plan, Some(to_only));
+
+        let from_only = check_plan(&accounts, &views, Some("a"), None).unwrap();
+        assert_eq!(key_of(target(&views, "a", Some(&from_only))), Some("c"));
+        let shown = next_of(&views, Some("b"), Some(&from_only), &|_| None, 0);
+        assert_eq!(shown.from.as_deref(), Some("a"));
+        assert_eq!(shown.to.as_deref(), Some("c"));
+        let json = serde_json::to_value(&shown).unwrap();
+        let want = serde_json::json!({ "from": "a", "to": null });
+        assert_eq!(json["plan"], want);
     }
 
     #[test]
@@ -249,6 +294,7 @@ mod tests {
         assert_eq!(shown.source, Source::Auto);
         assert_eq!(shown.from.as_deref(), Some("a"));
         assert_eq!(shown.to.as_deref(), Some("b"));
+        assert_eq!(shown.plan, None);
         let json = serde_json::to_value(&shown).unwrap();
         let want = serde_json::json!({ "kind": "percent", "percent": 98.0 });
         assert_eq!(json["when"], want);

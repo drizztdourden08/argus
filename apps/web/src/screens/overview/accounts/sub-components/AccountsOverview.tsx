@@ -11,6 +11,7 @@ import type { AccountsOverviewProps } from '../cards.type';
 import { findAccount } from '../model';
 import { ACCOUNT_TABS, TAB_SWITCH, TAB_SYNC } from '../next.constants';
 import { isActive, useSwitchFeed, useSwitchTarget } from '../switch';
+import { AccountCards } from './AccountCards';
 import { AccountPane } from './AccountPane';
 import { SwitchTab } from './SwitchTab';
 import { SyncCard } from './SyncCard';
@@ -33,10 +34,11 @@ const AccountsOverview = (props: AccountsOverviewProps) => {
     target.close();
   };
   return (
-    <Stack gap="sm">
+    <Stack gap="md">
       <Tabs tabs={ACCOUNT_TABS} activeTab={tab} selectedTone="neutral" onTabChange={setTab} />
-      {tab === TAB_SWITCH && <SwitchTab accounts={accounts} status={feed.status} actions={next} doc={doc} onOpen={setSelected} />}
+      {tab === TAB_SWITCH && <SwitchTab accounts={accounts} status={feed.status} actions={next} doc={doc} />}
       {tab === TAB_SYNC && <SyncCard drift={drift} accounts={accounts} run={run} steps={steps} actions={actions} onReview={onReview} />}
+      <AccountCards accounts={accounts} onOpen={setSelected} />
       {open && (
         <AccountPane
           account={open}

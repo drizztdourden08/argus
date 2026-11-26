@@ -66,14 +66,14 @@ fn keep(svc: &Services, accounts: &AccountsService, plan: Option<NextPlan>) -> R
     save(svc, &config).map_err(|e| e.to_string())
 }
 
-/// Sets the owner's plan. Blocking.
+/// Sets the owner's plan: both ends, or one end with the other left to Argus. Blocking.
 ///
 /// # Errors
 /// A plain sentence when the plan is refused or cannot be saved.
 pub(crate) fn set_plan(
     svc: &Services,
     accounts: &AccountsService,
-    (from, to): (&str, &str),
+    (from, to): (Option<&str>, Option<&str>),
 ) -> Result<NextPlan, String> {
     let plan = check_plan(&accounts.accounts(), &views(svc, accounts), from, to)?;
     keep(svc, accounts, Some(plan.clone()))?;
@@ -93,7 +93,7 @@ pub(crate) fn settle_plan(svc: &Services, accounts: &AccountsService, active: Op
     let done = accounts
         .config()
         .next_plan
-        .is_some_and(|p| active == Some(p.to.as_str()));
+        .is_some_and(|p| p.to.is_some() && p.to.as_deref() == active);
     if done {
         if let Err(e) = keep(svc, accounts, None) {
             svc.log

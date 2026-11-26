@@ -1,13 +1,14 @@
 /* @layer renderer-app @kind component */
-import { Box, DropdownMenu, DropSlot } from '@drizztdourden08/tessera';
+import { Box, DropdownMenu, DropSlot, Stack, Text } from '@drizztdourden08/tessera';
 import { useRef, useState } from 'react';
 import { DRAG_TYPE, SLOT_CLEAR } from '../next.constants';
 import type { AccountSlotProps } from '../next.type';
-import { findAccount, slotGroups } from '../model';
-import { SlotName } from './SlotName';
+import { accountKey, dragAccount, findAccount, slotGroups } from '../model';
+import { AccountBrief } from './AccountBrief';
+import './AccountSlot.css';
 
 const AccountSlot = (props: AccountSlotProps) => {
-  const { label, accounts, value, disabled, onPick, onClear } = props;
+  const { label, accounts, value, hint, disabled, onPick, onClear } = props;
   const anchor = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
   const chosen = findAccount(accounts, value);
@@ -19,21 +20,24 @@ const AccountSlot = (props: AccountSlotProps) => {
     if (!disabled && findAccount(accounts, key)) onPick(key);
   };
   return (
-    <Box ref={anchor}>
-      <DropSlot
-        label={label}
-        size="lg"
-        accept={DRAG_TYPE}
-        clearLabel={SLOT_CLEAR}
-        disabled={disabled}
-        onDrop={drop}
-        onClear={chosen ? onClear : undefined}
-        onPick={() => setOpen(true)}
-      >
-        {chosen ? <SlotName account={chosen} /> : undefined}
-      </DropSlot>
+    <Stack gap="2xs" align="center">
+      <Box ref={anchor}>
+        <DropSlot
+          className="account-slot"
+          label={label}
+          accept={DRAG_TYPE}
+          clearLabel={`${SLOT_CLEAR} ${label}`}
+          disabled={disabled}
+          onDrop={drop}
+          onClear={chosen ? onClear : undefined}
+          onPick={() => setOpen(true)}
+        >
+          {chosen ? <Box className="account-slot__held" draggable onDragStart={dragAccount(accountKey(chosen))}><AccountBrief account={chosen} /></Box> : undefined}
+        </DropSlot>
+      </Box>
+      {hint && <Text variant="caption" tone="muted" clamp={1}>{hint}</Text>}
       {open && <DropdownMenu groups={slotGroups(accounts, value, pick, onClear)} label={label} anchorRef={anchor} side="below" align="start" onClose={() => setOpen(false)} />}
-    </Box>
+    </Stack>
   );
 };
 

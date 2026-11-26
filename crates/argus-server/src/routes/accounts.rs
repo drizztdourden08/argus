@@ -3,10 +3,12 @@
 //! - `GET /api/accounts` is `{accounts, config, appVersion}`: the known accounts, the settings
 //!   without them and the installed Claude version (null when unreadable)
 //!   and each account gains `limit` `{confirmed, atMs, untilMs}` (true only after a real refusal),
-//!   the answer gains `next` `{from, to, source, when}` (the owner's plan, else the auto pick) and
+//!   the answer gains `next` `{from, to, source, when, plan}` (the owner's plan, else the auto
+//!   pick; `plan` is `{from, to}` with only the ends he picked, or null) and
 //!   `run` `{phase, atMs}` (where the current switch stands)
-//! - `POST /api/accounts/next {from, to}` plans the next switch, `{clear: true}` drops the plan;
-//!   it answers `{next}` and refuses with a plain sentence
+//! - `POST /api/accounts/next {from, to}` plans the next switch (one end may be null: Argus
+//!   picks it), `{clear: true}` drops the plan; it answers `{next}` and refuses with a plain
+//!   sentence
 //! - `POST /api/accounts/usage/refresh` reads every account's usage now and answers
 //!   `{results}` with one entry per account
 //! - `GET /api/accounts/settings` is the whole settings object, accounts included

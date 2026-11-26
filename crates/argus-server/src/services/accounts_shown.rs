@@ -48,7 +48,7 @@ pub(crate) fn shown_of(svc: &Services, accounts: &AccountsService) -> Shown {
 }
 
 /// Sets the plan from the body of `POST /api/accounts/next`, or clears it, and answers the next
-/// switch now. Blocking.
+/// switch now. An end that is null, empty or left out is left to Argus. Blocking.
 ///
 /// # Errors
 /// 400 with a plain sentence when the plan is refused.
@@ -57,16 +57,20 @@ pub(crate) fn plan_of(
     accounts: &AccountsService,
     body: &Value,
 ) -> Result<Value, ApiError> {
-    let key = |name: &str| body.get(name).and_then(Value::as_str);
+    let key = |name: &str| {
+        let sent = body.get(name).and_then(Value::as_str);
+        sent.filter(|k| !k.is_empty())
+    };
     if body.get("clear").and_then(Value::as_bool) == Some(true) {
         clear_plan(svc, accounts).map_err(ApiError::bad_request)?;
     } else {
-        let (Some(from), Some(to)) = (key("from"), key("to")) else {
+        let ends = (key("from"), key("to"));
+        if ends == (None, None) {
             return Err(ApiError::bad_request(
-                "Send `from` and `to`, or `clear` true.",
+                "Send `from` or `to`, or `clear` true.",
             ));
-        };
-        set_plan(svc, accounts, (from, to)).map_err(ApiError::bad_request)?;
+        }
+        set_plan(svc, accounts, ends).map_err(ApiError::bad_request)?;
     }
     Ok(json!(next_shown(svc, accounts)))
 }

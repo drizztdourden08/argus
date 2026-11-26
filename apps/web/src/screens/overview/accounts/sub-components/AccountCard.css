@@ -1,0 +1,6 @@
+/* @layer renderer-app @kind style */
+.account-card {
+  box-sizing: border-box;
+  inline-size: var(--size-256);
+  max-inline-size: 100%;
+}
