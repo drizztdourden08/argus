@@ -1,33 +1,28 @@
 /* @layer renderer-app @kind component */
-import { Button, Inline, SegmentedControl, Stack } from '@drizztdourden08/tessera';
+import { Inline } from '@drizztdourden08/tessera';
 import { useState } from 'react';
-import { copyDirection } from '../model';
-import { DIRECTION_BOTH, DIRECTION_LABEL, DIRECTION_LTR, DIRECTION_OPTIONS, SLOT_LEFT, SLOT_RIGHT, SYNC_GO_COPY, SYNC_GO_REVIEW } from '../next.constants';
-import type { Direction, SyncChoicesProps } from '../next.type';
+import { clearSlot, copyDirection, placeSlot } from '../model';
+import { DIRECTION_LTR, EMPTY_PAIR, SLOT_LEFT, SLOT_RIGHT, SYNC_PAIR_LABEL } from '../next.constants';
+import type { Direction, SlotPair, SyncChoicesProps } from '../next.type';
 import { AccountSlot } from './AccountSlot';
+import { SyncArrow } from './SyncArrow';
 
 const SyncChoices = (props: SyncChoicesProps) => {
   const { accounts, disabled, actions, onReview } = props;
-  const [left, setLeft] = useState<string | null>(null);
-  const [right, setRight] = useState<string | null>(null);
+  const [pair, setPair] = useState<SlotPair>(EMPTY_PAIR);
   const [direction, setDirection] = useState<Direction>(DIRECTION_LTR);
-  const ready = left !== null && right !== null && left !== right;
+  const { left, right } = pair;
   const go = () => {
-    const pair = ready ? copyDirection(direction, left, right) : null;
-    if (pair) actions.copy(pair.from, pair.to);
+    const copy = left && right ? copyDirection(direction, left, right) : null;
+    if (copy) actions.copy(copy.from, copy.to);
     else onReview();
   };
   return (
-    <Stack gap="sm">
-      <Inline gap="md" align="center" wrap>
-        <AccountSlot label={SLOT_LEFT} accounts={accounts} value={left} disabled={disabled} onPick={setLeft} />
-        <SegmentedControl aria-label={DIRECTION_LABEL} size="sm" value={direction} options={[...DIRECTION_OPTIONS]} onChange={(value) => setDirection(value as Direction)} />
-        <AccountSlot label={SLOT_RIGHT} accounts={accounts} value={right} disabled={disabled} onPick={setRight} />
-      </Inline>
-      <Inline gap="xs">
-        <Button size="sm" variant="primary" disabled={disabled || (direction !== DIRECTION_BOTH && !ready)} onClick={go}>{direction === DIRECTION_BOTH ? SYNC_GO_REVIEW : SYNC_GO_COPY}</Button>
-      </Inline>
-    </Stack>
+    <Inline gap="lg" align="center" justify="center" wrap role="group" aria-label={SYNC_PAIR_LABEL}>
+      <AccountSlot label={SLOT_LEFT} accounts={accounts} value={left} disabled={disabled} onPick={(key) => setPair(placeSlot(pair, 'left', key))} onClear={() => setPair(clearSlot(pair, 'left'))} />
+      <SyncArrow direction={direction} ready={left !== null && right !== null} disabled={disabled} onDirection={setDirection} onGo={go} />
+      <AccountSlot label={SLOT_RIGHT} accounts={accounts} value={right} disabled={disabled} onPick={(key) => setPair(placeSlot(pair, 'right', key))} onClear={() => setPair(clearSlot(pair, 'right'))} />
+    </Inline>
   );
 };
 

@@ -50,6 +50,7 @@ interface NextSwitch {
   to?: string | null;
   source?: 'owner' | 'auto';
   when?: NextWhen;
+  plan?: { from?: string | null; to?: string | null } | null;
 }
 
 type NextRunPhase = 'idle' | 'handover-asked' | 'handover-done' | 'limit-confirmed' | 'switching' | 'switched' | 'failed';
