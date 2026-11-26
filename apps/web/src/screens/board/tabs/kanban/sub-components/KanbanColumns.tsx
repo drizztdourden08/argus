@@ -49,7 +49,6 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       label={BOARD_LABEL}
       columnWidth="fill"
       columnHeight="fit"
-      grip={false}
       foldable={false}
       foldedGroups={folded}
       onFoldedGroupsChange={onFolded}
