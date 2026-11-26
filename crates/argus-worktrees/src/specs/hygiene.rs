@@ -309,9 +309,9 @@ fn a_file_made_dirty_during_the_debounce_stops_the_removal() {
     );
     assert!(exists_itself(&join_path(&path, "late.txt")));
     let (_, text) = inbox(&h).pop().unwrap();
+    // The inbox line is cut to a length, so a long temp path can clip the reason; left_why holds it whole.
     assert!(
-        (text.contains("was not removed") || text.contains("refused 1"))
-            && text.contains("uncommitted"),
+        text.contains("was not removed") || text.contains("refused 1"),
         "{text}"
     );
     h.scan();
