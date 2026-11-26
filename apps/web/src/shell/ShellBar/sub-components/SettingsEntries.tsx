@@ -9,10 +9,10 @@ const SettingsEntries = () => {
   const { name } = useOwnerProfile();
   return (
     <Flex gap="xs" align="center">
-      <IconButton label={`${name}, profile`} size="sm" variant="ghost" onClick={() => openSettings('profile')}>
-        <OwnerMark size="xs" label={`${name}, profile`} />
+      <IconButton label={`${name}, profile`} variant="ghost" onClick={() => openSettings('profile')}>
+        <OwnerMark size="sm" label={`${name}, profile`} />
       </IconButton>
-      <IconButton label="Settings" size="sm" variant="ghost" onClick={() => openSettings()}>
+      <IconButton label="Settings" variant="ghost" onClick={() => openSettings()}>
         <Icon name="settings" />
       </IconButton>
     </Flex>
