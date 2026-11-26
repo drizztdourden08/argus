@@ -37,7 +37,7 @@
 
 .overlord-chat__bar {
   min-inline-size: 0;
-  padding-inline: calc(var(--space-md) + var(--border-width-thin) - var(--control-pad-sm));
+  padding-inline: var(--space-xs);
 }
 
 .overlord-chat__ring {

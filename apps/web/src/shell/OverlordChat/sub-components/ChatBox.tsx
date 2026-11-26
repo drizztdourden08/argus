@@ -23,7 +23,7 @@ const ChatBox = (props: ChatBoxProps) => {
           busy={action.busy}
           placeholder={CHAT_PLACEHOLDER}
         />
-        <Flex gap="xs" align="center" className="overlord-chat__bar">{bar}</Flex>
+        <Flex gap="sm" align="center" justify="end" wrap className="overlord-chat__bar">{bar}</Flex>
       </Stack>
       {action.problem && <Callout tone="danger">{action.problem}</Callout>}
     </Stack>
