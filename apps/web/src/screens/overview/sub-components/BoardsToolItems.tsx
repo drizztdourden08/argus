@@ -17,7 +17,7 @@ const boardsToolItems = (view: OverviewView): OverflowRowItem[] => [
     id: 'layout',
     priority: 2,
     end: true,
-    node: <SegmentedControl selectedTone="neutral" size="sm" aria-label="Boards layout" value={view.layout} options={LAYOUT_OPTIONS} onChange={view.setLayout} />,
+    node: <SegmentedControl size="sm" aria-label="Boards layout" value={view.layout} options={LAYOUT_OPTIONS} onChange={view.setLayout} />,
   },
 ];
 

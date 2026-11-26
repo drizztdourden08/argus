@@ -21,7 +21,7 @@ const KanbanToolbar = (props: KanbanToolbarProps) => {
     setDirection(direction);
   };
   const layoutControl = (
-    <SegmentedControl<KanbanLayout> selectedTone="neutral" aria-label="View" size="sm-plus" value={layout.layout} options={LAYOUT_OPTIONS} onChange={layout.setLayout} />
+    <SegmentedControl<KanbanLayout> aria-label="View" size="sm-plus" value={layout.layout} options={LAYOUT_OPTIONS} onChange={layout.setLayout} />
   );
   const groupSort = (
     <TabGroupSort

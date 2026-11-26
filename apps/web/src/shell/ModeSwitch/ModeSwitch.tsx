@@ -9,7 +9,7 @@ const ModeSwitch = (props: ModeSwitchProps) => {
     { value: 'overview' as const, label: 'Overview' },
     { value: 'boards' as const, label: 'Boards', disabled: boardsAvailable ? false : 'No boards yet' },
   ];
-  return <SegmentedControl<ShellMode> aria-label="Mode" selectedTone="neutral" options={options} value={mode} onChange={onChange} />;
+  return <SegmentedControl<ShellMode> aria-label="Mode" options={options} value={mode} onChange={onChange} />;
 };
 
 export { ModeSwitch };

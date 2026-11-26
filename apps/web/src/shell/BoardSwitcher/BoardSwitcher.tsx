@@ -16,7 +16,7 @@ const BoardSwitcher = (props: BoardSwitcherProps) => {
   const onHint = useCallback((hint: { label: string } | null) => setWarm(cards.find((card) => card.name === hint?.label)?.key ?? null), [cards]);
   if (options.length === 0) return null;
   return (
-    <SegmentedControl aria-label="Board" selectedTone="neutral" options={options} value={boardKey ?? ''} onChange={switchBoard} onHint={onHint} />
+    <SegmentedControl aria-label="Board" options={options} value={boardKey ?? ''} onChange={switchBoard} onHint={onHint} />
   );
 };
 

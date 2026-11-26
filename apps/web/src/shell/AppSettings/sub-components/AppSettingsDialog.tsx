@@ -15,7 +15,7 @@ const AppSettingsDialog = (props: AppSettingsDialogProps) => {
       surface="glass"
       title="Settings"
       onClose={onClose}
-      headerExtra={<SegmentedControl selectedTone="neutral" size="sm" aria-label="Settings section" value={section} options={SECTIONS} onChange={onSection} />}
+      headerExtra={<SegmentedControl size="sm" aria-label="Settings section" value={section} options={SECTIONS} onChange={onSection} />}
       actions={<Button size="sm" variant="ghost" onClick={onClose}>Close</Button>}
     >
       <View />
