@@ -8,11 +8,11 @@ const pickedOf = (next: AccountsStatus['next']): SlotPair => {
   return { left: plan?.from ?? null, right: plan?.to ?? null };
 };
 
-const nextPair = (status: AccountsStatus | null): NextPair => ({
-  picked: pickedOf(status?.next),
-  auto: { left: status?.next?.from ?? null, right: status?.next?.to ?? null },
-  when: status?.next?.when,
-  phase: status?.run?.phase,
-});
+const autoOf = (next: AccountsStatus['next']): SlotPair => ({ left: next?.from ?? null, right: next?.to ?? null });
+
+const nextPair = (status: AccountsStatus | null): NextPair => {
+  const next = status?.next;
+  return { picked: pickedOf(next), auto: autoOf(next), when: next?.when, phase: status?.run?.phase };
+};
 
 export { nextPair };
