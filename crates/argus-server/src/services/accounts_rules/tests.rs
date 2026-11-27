@@ -227,7 +227,7 @@ async fn a_rule_with_a_handover_asks_the_switch_for_one() {
 
 #[tokio::test(start_paused = true)]
 async fn a_completed_cycle_means_the_switch_skips_the_handover() {
-    let mut snap = snapshot(90.0, 10.0, HandoverMode::Auto);
+    let mut snap = snapshot(98.0, 10.0, HandoverMode::Auto);
     snap.cycle = CycleView::Ready;
     let (world, desk) = desk_with(snap);
     desk.evaluate().await;
@@ -404,21 +404,22 @@ async fn no_target_is_told_once() {
 }
 
 #[tokio::test(start_paused = true)]
-async fn the_fixed_ask_point_opens_a_cycle_and_asks() {
+async fn a_fixed_ask_point_below_the_switch_point_does_nothing() {
     let (world, desk) = desk_with(snapshot(92.0, 10.0, HandoverMode::At(90.0)));
     desk.evaluate().await;
-    assert_eq!(world.calls(), ["start a Fixed Some(90.0)", "ask_all"]);
+    assert_eq!(world.calls().len(), 0);
+    assert_eq!(world.doc_phases().len(), 0);
 }
 
 #[tokio::test(start_paused = true)]
 async fn a_ready_event_learns_once_and_starts_the_countdown() {
-    let mut snap = snapshot(90.0, 10.0, HandoverMode::Auto);
+    let mut snap = snapshot(98.0, 10.0, HandoverMode::Auto);
     snap.cycle = CycleView::Ready;
     let (world, desk) = desk_with(snap);
     let event = CycleEvent {
         cycle: "SW-4".to_owned(),
         account: "a".to_owned(),
-        use_at_ready: Some(90.0),
+        use_at_ready: Some(98.0),
         cut_off: Vec::new(),
     };
     desk.on_event(event.clone()).await;
@@ -426,4 +427,21 @@ async fn a_ready_event_learns_once_and_starts_the_countdown() {
     let learned = world.calls().iter().filter(|c| *c == "learn SW-4").count();
     assert_eq!(learned, 1);
     assert_eq!(world.doc_phases(), ["countdown"]);
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_ready_event_below_the_switch_point_starts_no_countdown() {
+    let mut snap = snapshot(96.0, 10.0, HandoverMode::Auto);
+    snap.cycle = CycleView::Ready;
+    let (world, desk) = desk_with(snap);
+    let event = CycleEvent {
+        cycle: "SW-5".to_owned(),
+        account: "a".to_owned(),
+        use_at_ready: Some(96.0),
+        cut_off: Vec::new(),
+    };
+    desk.on_event(event).await;
+    wait_grace().await;
+    assert_eq!(world.doc_phases().len(), 0);
+    assert!(!world.calls().iter().any(|c| c.starts_with("switch ")));
 }
