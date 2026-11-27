@@ -6,7 +6,8 @@
 use std::sync::Arc;
 
 use argus_accounts::handover::{
-    CycleEvent, Desk, DeskError, Lead, LeadAction, LeadReply, Outcome, StartRequest,
+    Cycle, CycleEvent, CyclePhase, Desk, DeskError, HandoverState, Lead, LeadAction, LeadReply,
+    Outcome, StartRequest,
 };
 use argus_accounts::{Threads, binding_limit};
 use serde_json::json;
@@ -95,7 +96,9 @@ impl Handovers {
         self.threads.handed_over(lead.0, lead.1)
     }
 
-    /// Starts a cycle. Blocking: wakes go through the wake engine.
+    /// Starts a cycle. Blocking: wakes go through the wake engine. A ready cycle of the same
+    /// account is used as it is (one switch, one cycle): it comes back with its ready event and
+    /// nothing is started.
     ///
     /// # Errors
     /// See [`Desk::start`].
@@ -104,8 +107,18 @@ impl Handovers {
         request: StartRequest,
         accounts: &AccountsService,
     ) -> Result<Outcome, DeskError> {
+        if let Some(ready) = self.ready_cycle(&request.account) {
+            return Ok(ready_outcome(ready));
+        }
         let defaults = accounts.config().estimate_defaults;
         self.published(self.logged(accounts, |d| d.start(request, &defaults)))
+    }
+
+    /// The current cycle when it is ready and for `account`.
+    fn ready_cycle(&self, account: &str) -> Option<Cycle> {
+        self.desk
+            .cycle()
+            .filter(|c| c.phase == CyclePhase::Ready && c.account == account)
     }
 
     /// The ask point. Blocking.
@@ -205,6 +218,27 @@ impl Handovers {
     }
 }
 
+/// A ready cycle as the outcome of a start that reused it.
+fn ready_outcome(cycle: Cycle) -> Outcome {
+    let cut_off = cycle
+        .leads
+        .iter()
+        .filter(|h| h.state == HandoverState::CutOff)
+        .map(|h| h.id.clone())
+        .collect();
+    let event = CycleEvent {
+        cycle: cycle.id.clone(),
+        account: cycle.account.clone(),
+        use_at_ready: cycle.use_at_ready,
+        cut_off,
+    };
+    Outcome {
+        cycle,
+        event: Some(event),
+        failures: Vec::new(),
+    }
+}
+
 /// The percent of an account's binding limit at the last poll.
 #[must_use]
 pub fn use_now(accounts: &AccountsService, account: &str) -> Option<f64> {
@@ -213,6 +247,13 @@ pub fn use_now(accounts: &AccountsService, account: &str) -> Option<f64> {
 }
 
 impl AccountsService {
+    /// Closes the ready cycle a switch was made from, so no restart or later switch reuses it.
+    pub fn spend_cycle(&self) {
+        if let Some(desk) = self.handovers() {
+            let _ = desk.desk().spend();
+        }
+    }
+
     /// The handover desk, once the service started.
     #[must_use]
     pub fn handovers(&self) -> Option<Arc<Handovers>> {
@@ -246,5 +287,39 @@ pub(crate) fn attach(svc: &Services, accounts: &AccountsService) {
         Err(e) => svc
             .log
             .error("accounts handover desk not started", json!({ "error": e })),
+    }
+}
+
+// test-tag: critical
+#[cfg(test)]
+mod tests {
+    use argus_accounts::handover::{Cycle, CycleMode, CyclePhase};
+
+    use super::ready_outcome;
+
+    fn ready_cycle() -> Cycle {
+        Cycle {
+            id: "SW-6".to_owned(),
+            account: "second".to_owned(),
+            mode: CycleMode::Now,
+            phase: CyclePhase::Ready,
+            started_at: "2026-11-27T01:42:46Z".to_owned(),
+            ask_at: None,
+            k: 1.0,
+            use_at_request: None,
+            use_at_ready: Some(100.0),
+            leads: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn a_start_that_reuses_a_ready_cycle_gives_it_back_ready() {
+        let out = ready_outcome(ready_cycle());
+        assert_eq!(out.cycle.id, "SW-6");
+        let event = out.event.expect("a ready event");
+        assert_eq!(event.cycle, "SW-6");
+        assert_eq!(event.account, "second");
+        assert_eq!(event.cut_off.len(), 0);
+        assert_eq!(out.failures.len(), 0);
     }
 }
