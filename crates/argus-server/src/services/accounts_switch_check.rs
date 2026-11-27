@@ -11,7 +11,7 @@ use argus_notify::{By, Level, PingRequest};
 use serde_json::{Value, json};
 
 use super::AccountsService;
-use super::accounts_switch::{cached_version, shown_switch};
+use super::accounts_switch::{cached_version, reread_version, shown_switch};
 use super::accounts_switch_log::{Line, LineState, Stage, sidebar_check_line};
 use crate::Services;
 
@@ -147,15 +147,20 @@ pub(crate) fn check_sidebars(
 fn run_check(svc: &Services, accounts: &AccountsService, ends: &(Account, Account), id: &str) {
     let (from, to) = ends;
     wait_for_quiet(accounts);
+    let out = cached_version();
+    let verified = accounts.config().verified_app_version;
+    let now = reread_version(accounts);
+    let warning = way_in_text(out.as_deref(), now.as_deref(), verified.as_deref());
     let checked = check_and_repair(
         || accounts.copy_left(from, to),
         || accounts.copy_onto(from, to, false).map(|_| ()),
     );
     let left = checked.left;
     let line = sidebar_check_line(&left, &to.label);
-    let mut lines: Vec<Line> = (checked.repair.iter())
-        .map(|r| repair_line(checked.missing, r))
+    let mut lines: Vec<Line> = (warning.into_iter())
+        .map(|text| Line::new(Stage::Verify, LineState::Done, text))
         .collect();
+    lines.extend((checked.repair.iter()).map(|r| repair_line(checked.missing, r)));
     lines.push(line.clone());
     if left == Ok(0) {
         accounts.finish_switch(id, ("done", None), &lines);
@@ -181,6 +186,27 @@ fn run_check(svc: &Services, accounts: &AccountsService, ends: &(Account, Accoun
             url: Some(format!("http://127.0.0.1:{}/?tab=accounts", svc.port())),
         });
     }
+}
+
+/// The warning step once Claude started again, when the version that runs now is not the one a
+/// switch confirmed; `out` is the version read when the switch began. Never a failure.
+fn way_in_text(out: Option<&str>, now: Option<&str>, verified: Option<&str>) -> Option<String> {
+    let Some(version) = now else {
+        return Some(
+            "Warning: the Claude version could not be read after it started again; the sidebar check goes on."
+                .to_owned(),
+        );
+    };
+    if verified == Some(version) {
+        return None;
+    }
+    let was = match out {
+        Some(before) if before != version => format!(" (it was {before} when the switch began)"),
+        _ => String::new(),
+    };
+    Some(format!(
+        "Warning: no switch confirmed Claude {version} yet{was}; the sidebar check goes on."
+    ))
 }
 
 /// Keeps the check in the store from its start, so a restart of Argus can take it up again.
@@ -267,7 +293,10 @@ mod tests {
 
     use serde_json::json;
 
-    use super::{QUIET_POLLS, check_and_repair, pending_of, repair_line, settle, still_verifying};
+    use super::{
+        QUIET_POLLS, check_and_repair, pending_of, repair_line, settle, still_verifying,
+        way_in_text,
+    };
     use crate::services::accounts_switch_log::LineState;
 
     #[test]
@@ -341,6 +370,24 @@ mod tests {
         let done = json!({ "id": "SW-4", "desktopPhase": "done" });
         assert!(!still_verifying(Some(&done), "SW-4"));
         assert!(!still_verifying(None, "SW-4"));
+    }
+
+    #[test]
+    fn the_confirmed_version_after_the_start_has_no_warning() {
+        assert_eq!(way_in_text(Some("1.2"), Some("1.2"), Some("1.2")), None);
+    }
+
+    #[test]
+    fn a_version_that_changed_during_the_switch_is_a_warning_that_says_so() {
+        let text = way_in_text(Some("1.2"), Some("1.3"), Some("1.2")).unwrap_or_default();
+        assert!(text.contains("Claude 1.3"), "{text}");
+        assert!(text.contains("it was 1.2"), "{text}");
+    }
+
+    #[test]
+    fn an_unread_version_after_the_start_is_a_warning_not_a_failure() {
+        let text = way_in_text(Some("1.2"), None, Some("1.2")).unwrap_or_default();
+        assert!(text.contains("could not be read"), "{text}");
     }
 
     #[test]

@@ -58,6 +58,12 @@ fn refresh_version(accounts: &AccountsService, app: &Path) -> Option<String> {
     found
 }
 
+/// Reads the Claude version again, as it is after Claude started; keeps and answers it. Blocking.
+pub(super) fn reread_version(accounts: &AccountsService) -> Option<String> {
+    let app = find_app_data(accounts.config().app_data.as_deref())?;
+    refresh_version(accounts, &app)
+}
+
 /// The Claude version, read once and kept; a switch and start-up read it again. Blocking.
 pub fn app_version(accounts: &AccountsService) -> Option<String> {
     cached_version().or_else(|| {
