@@ -588,6 +588,27 @@ mod tests {
     }
 
     #[test]
+    fn a_cancelled_cycle_is_saved_with_its_leads_closed() {
+        let (world, desk) = desk(&["rotp"]);
+        desk.start(request(CycleMode::Now), &EstimateDefaults::default())
+            .unwrap();
+        desk.cut_off_rest(Some(96.0)).unwrap();
+        assert!(desk.cancel().unwrap());
+        let saved = world.saved.lock().unwrap().clone().unwrap();
+        assert_eq!(saved.phase, CyclePhase::Cancelled);
+        assert_eq!(saved.leads[0].state, HandoverState::Resumed);
+        let status = desk
+            .lead(
+                ("rotp", "lead"),
+                LeadAction::Status,
+                None,
+                &EstimateDefaults::default(),
+            )
+            .unwrap();
+        assert_eq!(status.next, "resume");
+    }
+
+    #[test]
     fn no_cycle_answers_not_found() {
         let (_, desk) = desk(&[]);
         let err = desk

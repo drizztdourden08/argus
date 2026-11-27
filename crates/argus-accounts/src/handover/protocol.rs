@@ -565,11 +565,18 @@ impl Cycle {
         ready
     }
 
-    /// Calls the cycle off before the switch. Returns whether it was still running.
+    /// Calls the cycle off before the switch. Returns whether it was still running. Every lead
+    /// that still owed a handover or waited to stop is closed as resumed, so
+    /// `coord handover status` tells it to carry on.
     pub fn cancel(&mut self) -> bool {
         let running = self.phase.is_open() || self.phase == CyclePhase::Ready;
         if running {
             self.phase = CyclePhase::Cancelled;
+            for lead in &mut self.leads {
+                if lead.state.is_pending() || lead.state.awaits_resume() {
+                    lead.state = HandoverState::Resumed;
+                }
+            }
         }
         running
     }
@@ -829,7 +836,7 @@ mod tests {
 
     #[test]
     fn a_lead_ready_before_the_ask_point_is_not_asked_again() {
-        let (mut c, _) = cycle(CycleMode::Auto, &["rotp", "brock"]);
+        let (mut c, _) = cycle(CycleMode::Now, &["rotp", "brock"]);
         c.on_ready("rotp", "lead", "a.md", Vec::new(), (None, NOW))
             .unwrap();
         assert_eq!(
@@ -1001,5 +1008,27 @@ mod tests {
         assert_eq!(c.phase, CyclePhase::Cancelled);
         assert!(!c.cancel());
         assert!(c.ask_all(None, NOW).is_empty());
+    }
+
+    #[test]
+    fn cancel_closes_every_lead_of_the_cycle() {
+        let (mut c, _) = cycle(CycleMode::Now, &["rotp", "brock"]);
+        c.on_ready("rotp", "lead", "~/h.md", Vec::new(), (None, NOW))
+            .unwrap();
+        assert_eq!(c.leads[0].state, HandoverState::Ready);
+        assert!(c.cancel());
+        let states: Vec<_> = c.leads.iter().map(|h| h.state).collect();
+        assert_eq!(states, [HandoverState::Resumed, HandoverState::Resumed]);
+        let status = c.on_status("rotp", "lead").unwrap();
+        assert_eq!(status.state, HandoverState::Resumed);
+    }
+
+    #[test]
+    fn cancel_leaves_a_spent_cycle_alone() {
+        let (mut c, _) = cycle(CycleMode::Now, &["rotp"]);
+        c.cut_off_rest(None);
+        assert!(c.spend());
+        assert!(!c.cancel());
+        assert_eq!(c.leads[0].state, HandoverState::CutOff);
     }
 }

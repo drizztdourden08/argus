@@ -265,6 +265,16 @@ async fn the_grace_end_stands_down_when_the_use_dropped() {
 }
 
 #[tokio::test(start_paused = true)]
+async fn a_stand_down_calls_the_handover_cycle_off() {
+    let (world, desk) = desk_with(snapshot(98.0, 10.0, HandoverMode::Auto));
+    desk.evaluate().await;
+    world.change(|s| s.accounts[0].percent = Some(80.0));
+    wait_grace().await;
+    assert!(!world.switched());
+    assert!(world.calls().contains(&"cancel_cycle".to_owned()));
+}
+
+#[tokio::test(start_paused = true)]
 async fn the_grace_end_stands_down_when_claude_changed_account() {
     let (world, desk) = desk_with(snapshot(98.0, 10.0, HandoverMode::Off));
     desk.evaluate().await;

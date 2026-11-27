@@ -91,6 +91,9 @@ pub(crate) trait World: Send + Sync {
     async fn switch(&self, to: &str, handover: bool) -> Result<(), String>;
     /// Counts the leads of an open cycle that went idle with a current handover as ready.
     async fn sweep_idle(&self) {}
+    /// Calls off a running or ready cycle of an account Claude no longer runs as: the switch it
+    /// was for ended without switching (the owner switched by hand), so its leads carry on.
+    async fn close_stale_cycle(&self) {}
     /// Whether a switch runs now, whoever started it.
     fn switching(&self) -> bool;
     /// Logs something that went wrong.
@@ -190,6 +193,7 @@ impl RulesDesk {
                 return;
             }
             self.world.sweep_idle().await;
+            self.world.close_stale_cycle().await;
             let snapshot = self.world.snapshot().await;
             let decisions = self.decisions(&state, &snapshot);
             self.apply(&mut state, &snapshot, decisions).await
@@ -391,6 +395,7 @@ impl RulesDesk {
         doc["error"] = json!(text);
         let line = Line::new(Stage::Countdown, LineState::Skipped, text);
         self.world.publish(doc, vec![line]).await;
+        self.world.cancel_cycle().await;
         let text = format!(
             "The switch to {} stood down: {}.",
             label_of(snapshot, &to),
