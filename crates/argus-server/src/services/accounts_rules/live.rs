@@ -111,10 +111,10 @@ impl Live {
         let cycle = cycle_view(cycle.as_ref(), active_view);
         Snapshot {
             accounts,
+            active,
             estimates,
             cycle,
             plan,
-            active,
         }
     }
 
