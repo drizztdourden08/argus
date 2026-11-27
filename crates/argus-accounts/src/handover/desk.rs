@@ -272,6 +272,37 @@ impl Desk {
         Ok(self.carry_out(cycle, effects, defaults))
     }
 
+    /// The owner skips one lead's wait: ready with `file`, or cut off without one. The Overlord
+    /// gets the ready notice once, and the last skip makes the cycle ready.
+    ///
+    /// # Errors
+    /// No cycle, the lead is not in it, it owes nothing any more, or the store refused.
+    pub fn skip_lead(
+        &self,
+        lead: (&str, &str),
+        file: Option<&str>,
+        use_now: Option<f64>,
+    ) -> Result<Outcome, DeskError> {
+        let now = self.now();
+        let (cycle, effects) = self.change(|c| Ok(c.skip_lead(lead, file, (use_now, &now))?))?;
+        Ok(self.carry_out(cycle, effects, &EstimateDefaults::default()))
+    }
+
+    /// A pending lead that is idle with a current handover `file` counts as ready.
+    ///
+    /// # Errors
+    /// No cycle, the lead is not in it, it owes nothing any more, or the store refused.
+    pub fn confirm_idle(
+        &self,
+        lead: (&str, &str),
+        file: &str,
+        use_now: Option<f64>,
+    ) -> Result<Outcome, DeskError> {
+        let now = self.now();
+        let (cycle, effects) = self.change(|c| Ok(c.confirm_idle(lead, file, (use_now, &now))?))?;
+        Ok(self.carry_out(cycle, effects, &EstimateDefaults::default()))
+    }
+
     /// The resumer's verdict on one handover.
     ///
     /// # Errors
@@ -378,7 +409,9 @@ mod tests {
 
     use super::{Desk, DeskError, LeadAction, StartRequest};
     use crate::config::EstimateDefaults;
-    use crate::handover::{AgentStop, Cycle, CycleMode, CyclePhase, HandoverState, Lead, WakeKind};
+    use crate::handover::{
+        AgentStop, Cycle, CycleMode, CyclePhase, HandoverState, Lead, Via, WakeKind,
+    };
     use crate::ports::{Clock, HandoverStore, Threads};
 
     #[derive(Default)]
@@ -442,6 +475,7 @@ mod tests {
             session_id: None,
             link: None,
             agents: Vec::new(),
+            handed_over: None,
         }
     }
 
@@ -551,6 +585,37 @@ mod tests {
             .unwrap();
         let again = Desk::new(world.clone(), world.clone(), world).unwrap();
         assert_eq!(again.cycle().map(|c| c.id), Some("SW-1".into()));
+    }
+
+    #[test]
+    fn a_skipped_lead_notices_the_overlord_once_and_the_cycle_is_saved() {
+        let (world, desk) = desk(&["rotp", "brock"]);
+        let defaults = EstimateDefaults::default();
+        desk.start(request(CycleMode::Now), &defaults).unwrap();
+        let first = desk
+            .skip_lead(("rotp", "lead"), Some("rotp.md"), Some(96.0))
+            .unwrap();
+        assert_eq!(first.event, None);
+        assert_eq!(world.notices.lock().unwrap().clone(), ["H-1"]);
+        let saved = world.saved.lock().unwrap().clone().unwrap();
+        assert_eq!(saved.leads[0].via, Some(Via::Owner));
+        let last = desk.skip_lead(("brock", "lead"), None, Some(97.0)).unwrap();
+        assert_eq!(last.event.map(|e| e.cycle), Some("SW-1".into()));
+        assert_eq!(world.notices.lock().unwrap().len(), 1);
+        assert_eq!(desk.cycle().map(|c| c.phase), Some(CyclePhase::Ready));
+        let again = desk.skip_lead(("brock", "lead"), None, None).unwrap_err();
+        assert_eq!(again.status(), 409);
+    }
+
+    #[test]
+    fn a_confirmed_idle_lead_is_saved_ready_via_idle() {
+        let (world, desk) = desk(&["rotp"]);
+        desk.start(request(CycleMode::Now), &EstimateDefaults::default())
+            .unwrap();
+        let out = desk.confirm_idle(("rotp", "lead"), "idle.md", None).unwrap();
+        assert_eq!(out.cycle.leads[0].via, Some(Via::Idle));
+        assert_eq!(world.notices.lock().unwrap().clone(), ["H-1"]);
+        assert_eq!(world.saved.lock().unwrap().as_ref(), Some(&out.cycle));
     }
 
     #[test]

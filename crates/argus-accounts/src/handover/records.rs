@@ -87,6 +87,16 @@ impl HandoverState {
     }
 }
 
+/// Who made a handover ready without the lead running `coord handover write`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Via {
+    /// The owner skipped the wait.
+    Owner,
+    /// The lead was idle and its handover file was current, so it counts as ready.
+    Idle,
+}
+
 /// A lead's own estimate of what its handover costs.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -131,6 +141,8 @@ pub struct Lead {
     pub link: Option<String>,
     /// The lead's live agents, with the branch each works on.
     pub agents: Vec<AgentStop>,
+    /// The handover file of a lead that is idle with a current handover: it starts ready.
+    pub handed_over: Option<String>,
 }
 
 /// A thread id read from a record; the old lead name reads as the lead.
@@ -178,6 +190,9 @@ pub struct Handover {
     /// When the lead marked it ready, ISO 8601.
     #[serde(default)]
     pub ready_at: Option<String>,
+    /// Who settled it when the lead did not write the handover itself.
+    #[serde(default)]
+    pub via: Option<Via>,
 }
 
 impl Handover {
@@ -253,7 +268,7 @@ impl Cycle {
 mod tests {
     use serde_json::json;
 
-    use super::{Cycle, CycleMode, CyclePhase, Handover, HandoverState};
+    use super::{Cycle, CycleMode, CyclePhase, Handover, HandoverState, Via};
 
     fn handover() -> Handover {
         Handover {
@@ -270,6 +285,7 @@ mod tests {
             estimate_asked_at: None,
             asked_at: None,
             ready_at: None,
+            via: None,
         }
     }
 
@@ -308,6 +324,17 @@ mod tests {
         doc["thread"] = json!("coordinator");
         let read: Handover = serde_json::from_value(doc).unwrap();
         assert_eq!(read.thread, "lead");
+    }
+
+    #[test]
+    fn a_handover_without_a_via_reads_as_none_and_a_via_uses_its_word() {
+        let mut doc = handover().to_doc();
+        doc.as_object_mut().unwrap().remove("via");
+        let read: Handover = serde_json::from_value(doc).unwrap();
+        assert_eq!(read.via, None);
+        let mut idle = handover();
+        idle.via = Some(Via::Idle);
+        assert_eq!(idle.to_doc()["via"], json!("idle"));
     }
 
     #[test]
