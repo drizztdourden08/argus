@@ -149,6 +149,25 @@ fn it_refuses_the_own_project_an_unknown_project_one_with_no_board_and_a_call_ou
 }
 
 #[test]
+fn a_lead_can_message_the_overlord_board_even_when_the_registry_retired_it() {
+    let (home, _) = world();
+    let coord_home = home.coord_home();
+    let overlord = home.path().join("overlord-checkout");
+    let board_json = lead_board("portfolio", &overlord);
+    argus_testkit::write_board(&coord_home, "portfolio", &board_json);
+    let mut registry = read_board_at(&coord_home, "_portfolio");
+    registry["projects"]["portfolio"] = json!({ "key": "portfolio", "retired": true });
+    argus_testkit::write_board(&coord_home, "_portfolio", &registry);
+    let px = "checkout-pixelarttool";
+    let ran = lead(&home, px, &["lead", "portfolio", "hello"]);
+    assert_eq!(ok(&ran), "queued for portfolio lead: hello\n");
+    let inbox = board(&home, "portfolio")["inbox"]["lead"].clone();
+    assert_eq!(inbox.as_array().expect("the lead inbox").len(), 1);
+    let nowhere = lead(&home, px, &["lead", "nowhere", "hello"]);
+    refused(&nowhere, 1, "unknown project \"nowhere\"");
+}
+
+#[test]
 fn the_text_is_required_and_limited_to_240_characters() {
     let (home, _) = world();
     let px = "checkout-pixelarttool";

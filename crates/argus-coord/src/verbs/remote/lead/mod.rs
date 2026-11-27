@@ -13,7 +13,7 @@ use std::fmt::Display;
 
 use argus_board::limits::require_text;
 use argus_board::portfolio::project_keys;
-use argus_board::roles::is_overlord;
+use argus_board::roles::{is_overlord, overlord_key};
 use argus_board::store::{board_path, read_board};
 use argus_core::ids::PORTFOLIO;
 use argus_core::js;
@@ -52,14 +52,17 @@ fn no_board(target: &str) -> CoordError {
     ))
 }
 
-/// The projects the Overlord's registry and the boards on disk know.
+/// The projects the Overlord's registry and the boards on disk know. The Overlord's own board is
+/// always among them: the registry can hold it as retired, which hides it from `project_keys`.
 fn known(call: &Call<'_>) -> Result<Vec<String>, CoordError> {
     let home = coord_home(call);
     let registry = read_board(&home, PORTFOLIO)?.unwrap_or_else(|| json!({}));
-    Ok(project_keys(
-        &home,
-        &json!({ "projects": registry["projects"] }),
-    ))
+    let mut keys = project_keys(&home, &json!({ "projects": registry["projects"] }));
+    let overlord = overlord_key(&home);
+    if !keys.contains(&overlord) {
+        keys.push(overlord);
+    }
+    Ok(keys)
 }
 
 fn check_target(call: &Call<'_>, from: &str, target: &str) -> Result<(), CoordError> {
