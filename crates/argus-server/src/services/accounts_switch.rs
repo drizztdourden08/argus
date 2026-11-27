@@ -14,7 +14,7 @@ use argus_accounts::desktop::{
     last_known_account, repair,
 };
 use argus_accounts::handover::{CycleEvent, CycleMode, StartRequest};
-use argus_accounts::{Account, DesktopApp, LoginVault, QUIT_BY_HAND, Scope, find_app_data};
+use argus_accounts::{Account, LoginVault, QUIT_BY_HAND, Scope, find_app_data};
 use argus_core::Coll;
 use argus_core::clock::now_ms;
 use argus_core::ids::PORTFOLIO;

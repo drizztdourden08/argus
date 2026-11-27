@@ -619,8 +619,17 @@ mod tests {
 
     #[test]
     fn nothing_at_all_happens_before_the_switch_point_in_any_handover_mode() {
-        for handover in [HandoverMode::Auto, HandoverMode::At(90.0), HandoverMode::Off] {
-            for cycle in [CycleView::None, CycleView::Estimating, CycleView::Asked, CycleView::Ready] {
+        for handover in [
+            HandoverMode::Auto,
+            HandoverMode::At(90.0),
+            HandoverMode::Off,
+        ] {
+            for cycle in [
+                CycleView::None,
+                CycleView::Estimating,
+                CycleView::Asked,
+                CycleView::Ready,
+            ] {
                 for percent in [90.0, 96.0, 97.9] {
                     let mut s = auto_setup(percent);
                     s.accounts[0].rules.handover = handover;

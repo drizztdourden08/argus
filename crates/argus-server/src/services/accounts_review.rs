@@ -146,7 +146,7 @@ impl ReviewRun {
                     &cancelled as &dyn Fn() -> bool,
                 );
                 CANCELLED.store(false, Ordering::SeqCst);
-                let closed = with_desktop_closed(&desktop, close_desktop, quit, &mut note, work);
+                let closed = with_desktop_closed(&*desktop, close_desktop, quit, &mut note, work);
                 WAITING.store(false, Ordering::SeqCst);
                 closed
             }
