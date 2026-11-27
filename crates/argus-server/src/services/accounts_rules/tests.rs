@@ -104,6 +104,10 @@ impl World for Fake {
     async fn cancel_cycle(&self) {
         self.log("cancel_cycle");
     }
+    async fn spend_cycle(&self) {
+        self.log("spend_cycle");
+        self.change(|s| s.cycle = CycleView::None);
+    }
     async fn publish(&self, doc: Value, lines: Vec<Line>) {
         held(&self.docs).push(doc);
         held(&self.lines).extend(lines.into_iter().map(|l| l.text));
@@ -161,7 +165,6 @@ fn snapshot(a: f64, b: f64, handover: HandoverMode) -> Snapshot {
         active: Some("a".to_owned()),
         estimates: None,
         cycle: CycleView::None,
-        cycle_id: None,
         plan: None,
     }
 }
@@ -226,11 +229,13 @@ async fn a_rule_with_a_handover_asks_the_switch_for_one() {
 async fn a_completed_cycle_means_the_switch_skips_the_handover() {
     let mut snap = snapshot(90.0, 10.0, HandoverMode::Auto);
     snap.cycle = CycleView::Ready;
-    snap.cycle_id = Some("SW-3".to_owned());
     let (world, desk) = desk_with(snap);
     desk.evaluate().await;
     wait_grace().await;
     assert_eq!(world.calls().last().unwrap(), "switch b false");
+    let calls = world.calls();
+    let spent = calls.iter().position(|c| c == "spend_cycle").unwrap();
+    assert_eq!(calls[spent + 1], "switch b false", "closed before the switch");
     desk.evaluate().await;
     assert_eq!(
         world.toasts().len(),
@@ -384,7 +389,6 @@ async fn the_fixed_ask_point_opens_a_cycle_and_asks() {
 async fn a_ready_event_learns_once_and_starts_the_countdown() {
     let mut snap = snapshot(90.0, 10.0, HandoverMode::Auto);
     snap.cycle = CycleView::Ready;
-    snap.cycle_id = Some("SW-4".to_owned());
     let (world, desk) = desk_with(snap);
     let event = CycleEvent {
         cycle: "SW-4".to_owned(),

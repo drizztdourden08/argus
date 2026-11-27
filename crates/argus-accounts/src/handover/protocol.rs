@@ -474,6 +474,16 @@ impl Cycle {
         Ok(&self.leads[at])
     }
 
+    /// A switch is made from a ready cycle: it closes, so no restart can use it a second time.
+    /// Returns whether it was ready.
+    pub fn spend(&mut self) -> bool {
+        let ready = self.phase == CyclePhase::Ready;
+        if ready {
+            self.phase = CyclePhase::Done;
+        }
+        ready
+    }
+
     /// Calls the cycle off before the switch. Returns whether it was still running.
     pub fn cancel(&mut self) -> bool {
         let running = self.phase.is_open() || self.phase == CyclePhase::Ready;
@@ -773,6 +783,16 @@ mod tests {
         assert_eq!(c.phase, CyclePhase::Done);
         assert!(c.mark_resumed("H-2", true).is_err());
         assert!(c.mark_resumed("H-9", true).is_err());
+    }
+
+    #[test]
+    fn spend_closes_a_ready_cycle_once() {
+        let (mut c, _) = cycle(CycleMode::Now, &["rotp"]);
+        assert!(!c.spend());
+        c.cut_off_rest(None);
+        assert!(c.spend());
+        assert_eq!(c.phase, CyclePhase::Done);
+        assert!(!c.spend());
     }
 
     #[test]

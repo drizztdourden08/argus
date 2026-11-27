@@ -46,8 +46,6 @@ pub(crate) struct Snapshot {
     pub estimates: Option<Estimates>,
     /// The cycle of the active account.
     pub cycle: CycleView,
-    /// The id of the last cycle, whatever it is for.
-    pub cycle_id: Option<String>,
     /// The switch the owner planned.
     pub plan: Option<NextPlan>,
 }
@@ -75,6 +73,8 @@ pub(crate) trait World: Send + Sync {
     async fn add_lead(&self, lead: &LeadKey) -> Result<(), String>;
     /// Calls the handover cycle off.
     async fn cancel_cycle(&self);
+    /// Closes the ready cycle a switch is made from, in the store, so a restart never reuses it.
+    async fn spend_cycle(&self);
     /// Writes the `switch` state doc, with `lines` added to its step log.
     async fn publish(&self, doc: Value, lines: Vec<Line>);
     /// Adds steps to the step log of the switch.
@@ -125,8 +125,6 @@ struct State {
     countdown: Option<Running>,
     hold_offs: Vec<HoldOff>,
     told: Option<Window>,
-    /// The cycle a switch was already made from; it does not start another countdown.
-    spent: Option<String>,
     learned: Option<String>,
     switching: bool,
 }
@@ -136,6 +134,8 @@ struct Go {
     from: HoldOff,
     to: String,
     handover: bool,
+    /// Whether the switch spends a ready cycle.
+    spend: bool,
     /// The id of the countdown the switch comes from.
     id: String,
     /// The name of the target, for the owner.
@@ -196,21 +196,12 @@ impl RulesDesk {
         }
     }
 
-    fn cycle_view(state: &State, snapshot: &Snapshot) -> CycleView {
-        let spent = state.spent.is_some() && snapshot.cycle_id == state.spent;
-        if spent && snapshot.cycle == CycleView::Ready {
-            CycleView::None
-        } else {
-            snapshot.cycle
-        }
-    }
-
     fn decisions(&self, state: &State, snapshot: &Snapshot) -> Vec<Decision> {
         decide(&Facts {
             accounts: &snapshot.accounts,
             active: snapshot.active.as_deref(),
             estimates: snapshot.estimates.as_ref(),
-            cycle: Self::cycle_view(state, snapshot),
+            cycle: snapshot.cycle,
             hold_offs: &state.hold_offs,
             countdown: state.countdown.as_ref().map(|r| &r.countdown),
             told: state.told.as_ref(),
@@ -375,16 +366,14 @@ impl RulesDesk {
     fn begin_switch(state: &mut State, snapshot: &Snapshot, from: &str, to: String) -> Option<Go> {
         let id = state.countdown.take()?.id;
         let view = view_of(snapshot, from)?;
-        let cycle = Self::cycle_view(state, snapshot);
-        if cycle == CycleView::Ready {
-            state.spent.clone_from(&snapshot.cycle_id);
-        }
+        let ready = snapshot.cycle == CycleView::Ready;
         state.switching = true;
         Some(Go {
             from: HoldOff::after_cancel(view),
             label: label_of(snapshot, &to),
             to,
-            handover: view.rules.handover != HandoverMode::Off && cycle != CycleView::Ready,
+            handover: view.rules.handover != HandoverMode::Off && !ready,
+            spend: ready,
             id,
         })
     }
@@ -428,6 +417,9 @@ impl RulesDesk {
         let text = format!("The countdown ended: the switch to {} starts.", go.label);
         let line = Line::new(Stage::Countdown, LineState::Done, text);
         self.world.note(vec![line]).await;
+        if go.spend {
+            self.world.spend_cycle().await;
+        }
         let result = self.world.switch(&go.to, go.handover).await;
         if let Err(e) = &result {
             self.tell_failure(&go, e).await;
@@ -501,11 +493,11 @@ impl RulesDesk {
     /// The owner chose Switch now during a countdown: drops the countdown, without a hold-off
     /// and without a doc write (the switch reuses the countdown's id and writes the doc).
     pub(crate) async fn end(&self) -> bool {
-        let Some((mut state, _running, snapshot)) = self.stop_countdown().await else {
+        let Some((_state, _running, snapshot)) = self.stop_countdown().await else {
             return false;
         };
-        if Self::cycle_view(&state, &snapshot) == CycleView::Ready {
-            state.spent.clone_from(&snapshot.cycle_id);
+        if snapshot.cycle == CycleView::Ready {
+            self.world.spend_cycle().await;
         }
         true
     }

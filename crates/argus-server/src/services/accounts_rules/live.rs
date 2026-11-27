@@ -5,7 +5,7 @@
 use std::sync::Arc;
 
 use argus_accounts::handover::{Cycle, CycleMode, CyclePhase, DeskError, Outcome, StartRequest};
-use argus_accounts::rules::{CycleView, Estimates, LeadKey};
+use argus_accounts::rules::{CycleView, Estimates, LeadKey, View};
 use argus_notify::{By, Level, PingRequest};
 use async_trait::async_trait;
 use serde_json::{Value, json};
@@ -35,12 +35,18 @@ fn lead_key(lead: LeadRef) -> LeadKey {
     }
 }
 
-fn cycle_view(cycle: Option<&Cycle>, active: Option<&str>) -> CycleView {
+/// What the rules see of the last cycle. A ready cycle counts only when it is for the active
+/// account and fresh. A switch closes the cycle it used, so a ready one is fresh unless it
+/// is a `now` cycle (opened by a switch) while the account is still under its switch point:
+/// that one predates the last switch onto the account and is ignored.
+fn cycle_view(cycle: Option<&Cycle>, active: Option<&View>) -> CycleView {
     let Some(cycle) = cycle else {
         return CycleView::None;
     };
-    let mine = active == Some(cycle.account.as_str());
+    let mine = active.is_some_and(|v| v.key == cycle.account);
+    let stale = cycle.mode == CycleMode::Now && !active.is_some_and(View::over);
     match (cycle.phase, mine) {
+        (CyclePhase::Ready, true) if stale => CycleView::None,
         (CyclePhase::Estimating, true) => CycleView::Estimating,
         (CyclePhase::Asked, true) => CycleView::Asked,
         (CyclePhase::Ready, true) => CycleView::Ready,
@@ -99,11 +105,13 @@ impl Live {
                 new_leads: e.new_leads.into_iter().map(lead_key).collect(),
             });
         let cycle = self.accounts.handovers().and_then(|h| h.desk().cycle());
+        let active_view = active
+            .as_deref()
+            .and_then(|key| accounts.iter().find(|v| v.key == key));
         Snapshot {
             accounts,
             estimates,
-            cycle: cycle_view(cycle.as_ref(), active.as_deref()),
-            cycle_id: cycle.map(|c| c.id),
+            cycle: cycle_view(cycle.as_ref(), active_view),
             plan,
             active,
         }
@@ -122,7 +130,6 @@ impl World for Live {
             active: None,
             estimates: None,
             cycle: CycleView::None,
-            cycle_id: None,
             plan: None,
         })
     }
@@ -187,6 +194,18 @@ impl World for Live {
                 if let Some(desk) = me.accounts.handovers() {
                     if let Err(e) = desk.desk().cancel() {
                         me.warn("handover cycle not cancelled", &e.to_string());
+                    }
+                }
+            })
+            .await;
+    }
+
+    async fn spend_cycle(&self) {
+        let _ = self
+            .blocking(|me| {
+                if let Some(desk) = me.accounts.handovers() {
+                    if let Err(e) = desk.desk().spend() {
+                        me.warn("handover cycle not closed", &e.to_string());
                     }
                 }
             })
@@ -270,5 +289,67 @@ impl World for Live {
         self.svc
             .log
             .warn(what, json!({ "error": detail, "by": "accounts rules" }));
+    }
+}
+
+// test-tag: critical
+#[cfg(test)]
+mod tests {
+    use argus_accounts::handover::{Cycle, CycleMode, CyclePhase};
+    use argus_accounts::rules::{CycleView, View};
+    use argus_accounts::types::{HandoverMode, Rules};
+
+    use super::cycle_view;
+
+    fn view(percent: f64) -> View {
+        View {
+            key: "second".to_owned(),
+            label: "Second".to_owned(),
+            can_receive: true,
+            rules: Rules {
+                auto_switch: true,
+                switch_at: 100.0,
+                handover: HandoverMode::Auto,
+                can_receive: true,
+            },
+            percent: Some(percent),
+            critical: false,
+            resets_at_ms: None,
+        }
+    }
+
+    fn cycle(mode: CycleMode, phase: CyclePhase) -> Cycle {
+        Cycle {
+            id: "SW-4".to_owned(),
+            account: "second".to_owned(),
+            mode,
+            phase,
+            started_at: "2026-11-26T00:12:00Z".to_owned(),
+            ask_at: None,
+            k: 1.0,
+            use_at_request: None,
+            use_at_ready: None,
+            leads: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn a_stale_ready_cycle_under_the_switch_point_is_ignored() {
+        let ready = cycle(CycleMode::Now, CyclePhase::Ready);
+        assert_eq!(cycle_view(Some(&ready), Some(&view(91.0))), CycleView::None);
+    }
+
+    #[test]
+    fn a_fresh_ready_cycle_still_counts() {
+        let now = cycle(CycleMode::Now, CyclePhase::Ready);
+        assert_eq!(cycle_view(Some(&now), Some(&view(100.0))), CycleView::Ready);
+        let auto = cycle(CycleMode::Auto, CyclePhase::Ready);
+        assert_eq!(cycle_view(Some(&auto), Some(&view(91.0))), CycleView::Ready);
+    }
+
+    #[test]
+    fn a_spent_cycle_is_never_ready() {
+        let done = cycle(CycleMode::Auto, CyclePhase::Done);
+        assert_eq!(cycle_view(Some(&done), Some(&view(99.0))), CycleView::None);
     }
 }
