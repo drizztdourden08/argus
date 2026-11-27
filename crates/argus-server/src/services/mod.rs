@@ -48,6 +48,7 @@ pub(crate) mod accounts_rules;
 pub(crate) mod accounts_run;
 pub(crate) mod accounts_shown;
 pub(crate) mod accounts_switch;
+pub(crate) mod accounts_switch_check;
 pub(crate) mod accounts_switch_log;
 pub(crate) mod accounts_sync;
 pub(crate) mod activity;

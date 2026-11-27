@@ -25,7 +25,7 @@ use tokio::sync::broadcast::Receiver;
 use super::AccountsService;
 use super::accounts_handover::{Handovers, use_now};
 use super::accounts_switch_log::{
-    Line, LineState, Stage, sidebar_check_line, stage_of, step_lines, sync_info, sync_note,
+    Line, LineState, Stage, stage_of, step_lines, sync_info, sync_note,
 };
 use crate::Services;
 
@@ -40,7 +40,7 @@ static VERSION: Mutex<Option<String>> = Mutex::new(None);
 /// The version the owner was last told about, so the notice goes out once per version.
 static TOLD_VERSION: Mutex<Option<String>> = Mutex::new(None);
 
-fn cached_version() -> Option<String> {
+pub(super) fn cached_version() -> Option<String> {
     VERSION
         .lock()
         .unwrap_or_else(PoisonError::into_inner)
@@ -407,7 +407,9 @@ impl Prepared {
         let done = result?;
         if done == Done::Switched {
             let _ =
-                tokio::task::spawn_blocking(move || check_sidebars(&svc, &accounts, &ends, &id))
+                tokio::task::spawn_blocking(move || {
+                    super::accounts_switch_check::check_sidebars(&svc, &accounts, &ends, &id);
+                })
                     .await;
         }
         Ok(())
@@ -548,63 +550,6 @@ fn failure_line(done: &Done, steps: &[Step], why: &str) -> Line {
         LineState::Failed,
         format!("The switch failed: {why}."),
     )
-}
-
-/// After a confirmed switch: checks that the sync held once Claude started again, and ends the
-/// switch `id` (verifying until then) as done or failed. A check that passes confirms the
-/// installed Claude version; one that fails is a failed step, the error of the doc, an urgent
-/// toast and a log line, never silent. Blocking.
-fn check_sidebars(svc: &Services, accounts: &AccountsService, ends: &(Account, Account), id: &str) {
-    let (from, to) = ends;
-    std::thread::sleep(accounts.sidebar_settle());
-    let left = accounts.copy_left(from, to);
-    let line = sidebar_check_line(&left, &to.label);
-    if left == Ok(0) {
-        accounts.finish_switch(id, ("done", None), &[line]);
-        verify_version(svc, accounts);
-        return;
-    }
-    let detail = match &left {
-        Ok(n) => format!("{n} sidebar changes of the copy are missing again after Claude started"),
-        Err(why) => why.clone(),
-    };
-    let error = format!("the switch worked but the sidebar check failed: {detail}");
-    accounts.finish_switch(
-        id,
-        ("failed", Some(error.as_str())),
-        std::slice::from_ref(&line),
-    );
-    svc.log
-        .warn("accounts sidebar check failed", json!({ "error": detail }));
-    if let Some(notify) = &svc.notify {
-        notify.send(PingRequest {
-            title: Some("The sidebars are not the same after the switch".to_owned()),
-            text: line.text,
-            level: Level::Urgent,
-            project: None,
-            thread: None,
-            by: By::Auto,
-            url: Some(format!("http://127.0.0.1:{}/?tab=accounts", svc.port())),
-        });
-    }
-}
-
-/// A switch whose account and sidebars checked out: the installed Claude version is now the
-/// verified one.
-fn verify_version(svc: &Services, accounts: &AccountsService) {
-    let Some(version) = cached_version() else {
-        return;
-    };
-    if accounts.config().verified_app_version.as_deref() == Some(version.as_str()) {
-        return;
-    }
-    let saved = accounts
-        .update(&json!({ "verifiedAppVersion": version }))
-        .and_then(|config| super::accounts::save(svc, &config).map_err(|e| e.to_string()));
-    if let Err(e) = saved {
-        svc.log
-            .error("accounts verified version not saved", json!({ "error": e }));
-    }
 }
 
 /// The result a [`Done`] makes, with the reason in plain words.
