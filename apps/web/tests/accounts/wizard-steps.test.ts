@@ -29,7 +29,7 @@ describe('the wizard steps of an account switch', { tags: ['critical'] }, () => 
   });
 
   it('points the current id at the first stage not done when nothing runs', () => {
-    const doc: AccountsSwitch = { phase: 'sync', steps: [{ stage: 'detect', state: 'done' }, { stage: 'handover', state: 'done' }] };
+    const doc: AccountsSwitch = { steps: [{ stage: 'detect', state: 'done' }, { stage: 'handover', state: 'done' }] };
     expect(wizardSteps(doc).currentId).toBe('countdown');
   });
 
