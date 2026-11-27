@@ -199,12 +199,17 @@ impl AccountsService {
     }
 
     /// Notes the lines a change of the handover cycle makes, and the leads it has. Blocking.
-    pub(crate) fn note_cycle(&self, lines: &CycleLines, cycle: Option<&Cycle>) {
+    pub(crate) fn note_cycle(
+        &self,
+        lines: &CycleLines,
+        cycle: Option<&Cycle>,
+        name_of: &dyn Fn(&str) -> Option<String>,
+    ) {
         let now = now_ms();
         let mut log = self.switch_log.held();
         log.add(now, &lines.process);
         if let Some(cycle) = cycle {
-            log.set_threads(threads_of(cycle));
+            log.set_threads(threads_of(cycle, name_of));
         }
         log.add_after(now, &lines.resume);
         let even_ended = !lines.resume.is_empty();

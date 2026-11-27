@@ -159,8 +159,20 @@ fn thread_state(state: HandoverState) -> (&'static str, Option<&'static str>) {
     }
 }
 
+/// The title of a lead's row: its project's name and the thread, or the thread alone when the
+/// project has no known name.
+fn lead_title(h: &Handover, name_of: &dyn Fn(&str) -> Option<String>) -> String {
+    match name_of(&h.board) {
+        Some(name) => format!("{name} {}", h.thread),
+        None => h.thread.clone(),
+    }
+}
+
 /// The leads the cycle found for the handover, as the `threads` of the doc.
-pub(crate) fn threads_of(cycle: &Cycle) -> Vec<Value> {
+pub(crate) fn threads_of(
+    cycle: &Cycle,
+    name_of: &dyn Fn(&str) -> Option<String>,
+) -> Vec<Value> {
     cycle
         .leads
         .iter()
@@ -169,7 +181,7 @@ pub(crate) fn threads_of(cycle: &Cycle) -> Vec<Value> {
             let mut out = json!({
                 "board": h.board,
                 "thread": h.thread,
-                "title": h.thread,
+                "title": lead_title(h, name_of),
                 "sessionId": h.session_id,
                 "state": state,
             });

@@ -75,6 +75,7 @@ impl Handovers {
         accounts.note_cycle(
             &cycle_lines(before.as_ref(), after.as_ref()),
             after.as_ref(),
+            &|board| self.desk.project_name(board),
         );
         out
     }

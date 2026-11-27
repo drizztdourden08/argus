@@ -138,6 +138,10 @@ pub trait Threads: Send + Sync {
     fn agent_loads(&self, _board: &str, _thread: &str) -> Vec<AgentLoad> {
         Vec::new()
     }
+    /// The display name of the project a board belongs to, when known.
+    fn project_name(&self, _board: &str) -> Option<String> {
+        None
+    }
 }
 
 /// Where the handover cycle and its counters are kept.
