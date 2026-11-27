@@ -58,6 +58,8 @@ type NextRunPhase = 'idle' | 'handover-asked' | 'handover-done' | 'limit-confirm
 interface NextRun {
   phase?: NextRunPhase;
   atMs?: number | null;
+  from?: string | null;
+  to?: string | null;
 }
 
 interface AccountsStatus {

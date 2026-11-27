@@ -115,6 +115,16 @@ describe('the model of the switch tab', { tags: ['critical'] }, () => {
     expect(nextSteps().currentId).toBeNull();
   });
 
+  it('shows no step as done for a new plan after a finished run', () => {
+    const run = { phase: 'switched' as const, atMs: 1, from: 'a', to: 'b' };
+    const fresh = nextPair({ next: { from: 'b', to: 'a', source: 'auto' }, run });
+    expect(fresh.phase).toBeUndefined();
+    expect(nextSteps(fresh.phase).currentId).toBeNull();
+    expect(nextSteps(fresh.phase).complete).toBe(false);
+    expect(nextPair({ next: { from: 'a', to: 'b', source: 'auto' }, run }).phase).toBe('switched');
+    expect(nextPair({ next: { from: 'b', to: 'a' }, run: { ...run, phase: 'switching' } }).phase).toBe('switching');
+  });
+
   it('words the when and the copy direction', () => {
     expect(whenText({ kind: 'percent', percent: 98 })).toBe('At 98% used');
     expect(whenText({ kind: 'unknown' })).toBe('When is not known yet');
