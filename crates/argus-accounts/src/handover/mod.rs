@@ -17,5 +17,5 @@ pub use desk::{Desk, DeskError, LeadAction, LeadReply, Outcome, StartRequest};
 pub use estimator::{AgentLoad, CycleCost, LeadEstimate, LeadInput};
 pub use protocol::{CycleEvent, Effect, ProtocolError, READY_REASON, WakeKind};
 pub use records::{
-    AgentStop, Cycle, CycleMode, CyclePhase, Estimate, Handover, HandoverState, Lead,
+    AgentStop, Cycle, CycleMode, CyclePhase, Estimate, Handover, HandoverState, Lead, Via,
 };

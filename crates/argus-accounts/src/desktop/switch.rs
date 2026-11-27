@@ -96,6 +96,10 @@ pub trait Stages: Send + Sync {
     fn active_account(&self) -> Option<String>;
     /// Called right after Claude is confirmed closed, before anything else touches its data.
     fn closed(&self) {}
+    /// Whether the owner asked to stop waiting for the account check or the sign-in.
+    fn skip_wait(&self) -> bool {
+        false
+    }
 }
 
 /// The waits of the confirm step.
@@ -435,7 +439,7 @@ fn after_close(
     let outcome = if flow.first_time {
         Ok(wait_for_sign_in(plan, (app, stages), timing))
     } else {
-        confirm(plan, (app, stages), timing, since).map(|note| (note, false))
+        confirm(plan, (app, stages), timing, since)
     };
     match outcome {
         Ok((note, false)) => {
@@ -499,15 +503,19 @@ fn run_step(
     result.map(|_| ())
 }
 
+/// The note of a wait the owner ended.
+const SKIPPED_NOTE: &str = "the owner ended the check";
+
 /// Confirms the account after a restore. `config.json` already names the target (the restore
 /// wrote it), so that alone proves nothing: the app must run and must have rewritten
-/// `config.json` after `since_ms`, still naming the target.
+/// `config.json` after `since_ms`, still naming the target. The note says how it went and
+/// whether it is a note to keep (`true`: the owner ended the wait).
 fn confirm(
     plan: &Plan,
     (app, stages): (&dyn DesktopApp, &dyn Stages),
     timing: Timing,
     since_ms: i64,
-) -> Result<String, String> {
+) -> Result<(String, bool), String> {
     let to = plan.to;
     let wanted = to.desktop_account.clone();
     let shown = || {
@@ -516,8 +524,12 @@ fn confirm(
             && wanted.is_some()
             && stages.active_account() == wanted
     };
-    if wait_until(timing.confirm, timing.poll, shown) {
-        return Ok(format!("Claude shows {}", to.label));
+    if wait_until(timing.confirm, timing.poll, || shown() || stages.skip_wait()) {
+        return Ok(if shown() {
+            (format!("Claude shows {}", to.label), false)
+        } else {
+            (SKIPPED_NOTE.to_owned(), true)
+        });
     }
     Err(if !app.is_running() {
         "Claude is not running after the start".to_owned()
@@ -532,7 +544,7 @@ fn confirm(
 }
 
 /// A target with no saved login: waits for the owner to sign in to it. The note says how it went
-/// and whether it is a note to keep (`true`: nobody signed in).
+/// and whether it is a note to keep (`true`: nobody signed in, or the owner ended the wait).
 fn wait_for_sign_in(
     plan: &Plan,
     (app, stages): (&dyn DesktopApp, &dyn Stages),
@@ -540,18 +552,23 @@ fn wait_for_sign_in(
 ) -> (String, bool) {
     let wanted = plan.to.desktop_account.clone();
     let label = &plan.to.label;
-    let signed = wait_until(timing.sign_in, timing.poll, || {
-        wanted.is_some() && stages.active_account() == wanted
-    });
-    if signed {
+    let signed = || wanted.is_some() && stages.active_account() == wanted;
+    if !wait_until(timing.sign_in, timing.poll, || signed() || stages.skip_wait()) {
+        return (unsigned_note(app, label), true);
+    }
+    if signed() {
         (format!("Claude shows {label}"), false)
-    } else if app.is_running() {
-        let note = format!(
-            "Claude is open but not signed in to {label}; it stays on the account you choose"
-        );
-        (note, true)
     } else {
-        (format!("Claude was closed before {label} signed in"), true)
+        (SKIPPED_NOTE.to_owned(), true)
+    }
+}
+
+/// What a sign-in wait that ran out says.
+fn unsigned_note(app: &dyn DesktopApp, label: &str) -> String {
+    if app.is_running() {
+        format!("Claude is open but not signed in to {label}; it stays on the account you choose")
+    } else {
+        format!("Claude was closed before {label} signed in")
     }
 }
 
@@ -600,6 +617,7 @@ mod tests {
         shows: Option<String>,
         saved: bool,
         touched: bool,
+        skip: bool,
         closed_calls: Mutex<u32>,
         /// Whether the journal existed at each restore.
         journal_at_restore: Mutex<Vec<bool>>,
@@ -615,6 +633,7 @@ mod tests {
                 shows: shows.map(str::to_owned),
                 saved: true,
                 touched: true,
+                skip: false,
                 closed_calls: Mutex::new(0),
                 journal_at_restore: Mutex::default(),
                 watch: None,
@@ -690,6 +709,9 @@ mod tests {
         }
         fn closed(&self) {
             *self.closed_calls.lock().unwrap() += 1;
+        }
+        fn skip_wait(&self) -> bool {
+            self.skip
         }
     }
 
@@ -945,6 +967,27 @@ mod tests {
         let (done, steps, _) = go(&fake, false, false);
         assert!(matches!(done, Done::Noted(_)));
         assert_eq!(fake.calls(), ["close", "save a", "sync", "resume", "start"]);
+        assert_eq!(status(&steps, "confirm"), StepStatus::Done);
+    }
+
+    #[test]
+    fn skipping_the_sign_in_wait_ends_with_a_note_and_no_rollback() {
+        let mut fake = Fake::new("", Some("uuid-a"));
+        fake.saved = false;
+        fake.skip = true;
+        let (done, steps, _) = go(&fake, false, false);
+        assert_eq!(done, Done::Noted("the owner ended the check".to_owned()));
+        assert_eq!(fake.calls(), ["close", "save a", "sync", "resume", "start"]);
+        assert_eq!(status(&steps, "confirm"), StepStatus::Done);
+    }
+
+    #[test]
+    fn skipping_the_account_check_ends_with_a_note_and_no_rollback() {
+        let mut fake = Fake::new("", Some("uuid-a"));
+        fake.skip = true;
+        let (done, steps, _) = go(&fake, false, false);
+        assert_eq!(done, Done::Noted("the owner ended the check".to_owned()));
+        assert!(!fake.calls().contains(&"restore a".to_owned()));
         assert_eq!(status(&steps, "confirm"), StepStatus::Done);
     }
 }

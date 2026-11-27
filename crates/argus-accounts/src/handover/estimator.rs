@@ -446,6 +446,7 @@ mod tests {
             asked_at: Some(iso_ago(5)),
             ready_at: Some(iso_ago(1)),
             estimate_asked_at: None,
+            via: None,
         }
     }
 

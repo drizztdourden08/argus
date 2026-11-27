@@ -5,7 +5,7 @@
 use std::fmt;
 
 use super::records::{
-    AgentStop, Cycle, CycleMode, CyclePhase, Estimate, Handover, HandoverState, Lead,
+    AgentStop, Cycle, CycleMode, CyclePhase, Estimate, Handover, HandoverState, Lead, Via,
 };
 use crate::types::AccountKey;
 
@@ -157,7 +157,11 @@ pub fn check_estimate(estimate: &Estimate) -> Result<(), ProtocolError> {
     Ok(())
 }
 
+/// The handover of a lead. A lead that is idle with a current handover file starts ready, via
+/// idle, whatever step was asked for.
 fn handover_of(id: String, cycle: &str, lead: &Lead, state: HandoverState, now: &str) -> Handover {
+    let idle = lead.handed_over.is_some();
+    let state = if idle { HandoverState::Ready } else { state };
     Handover {
         id,
         cycle: cycle.to_owned(),
@@ -167,11 +171,12 @@ fn handover_of(id: String, cycle: &str, lead: &Lead, state: HandoverState, now: 
         link: lead.link.clone(),
         state,
         estimate: None,
-        file: None,
+        file: lead.handed_over.clone(),
         agents: lead.agents.clone(),
         estimate_asked_at: (state == HandoverState::EstimateAsked).then(|| now.to_owned()),
         asked_at: (state == HandoverState::Asked).then(|| now.to_owned()),
-        ready_at: None,
+        ready_at: idle.then(|| now.to_owned()),
+        via: idle.then_some(Via::Idle),
     }
 }
 
@@ -181,6 +186,24 @@ fn wake(h: &Handover, kind: WakeKind) -> Effect {
         board: h.board.clone(),
         thread: h.thread.clone(),
         kind,
+    }
+}
+
+fn ready_effect(h: &Handover) -> Effect {
+    Effect::Ready {
+        handover: h.id.clone(),
+        board: h.board.clone(),
+        thread: h.thread.clone(),
+    }
+}
+
+/// The effect a handover starts with: a wake for the step asked, or the notice that it is
+/// ready already.
+fn opening_effect(h: &Handover, kind: WakeKind) -> Effect {
+    if h.state == HandoverState::Ready {
+        ready_effect(h)
+    } else {
+        wake(h, kind)
     }
 }
 
@@ -220,10 +243,13 @@ pub fn start(
         cycle
             .leads
             .iter()
-            .map(|h| wake(h, WakeKind::Estimate))
+            .map(|h| opening_effect(h, WakeKind::Estimate))
             .collect()
     } else {
-        cycle.ask_all(spec.use_now, &spec.now)
+        let notices = cycle.leads.iter().filter(|h| h.state == HandoverState::Ready);
+        let mut effects: Vec<Effect> = notices.map(ready_effect).collect();
+        effects.extend(cycle.ask_all(spec.use_now, &spec.now));
+        effects
     };
     (cycle, effects)
 }
@@ -266,9 +292,10 @@ impl Cycle {
             (HandoverState::Asked, WakeKind::Request)
         };
         let h = handover_of(id, &self.id, lead, state, now);
-        let effect = wake(&h, kind);
+        let mut effects = vec![opening_effect(&h, kind)];
         self.leads.push(h);
-        Ok(vec![effect])
+        effects.extend(self.check_ready(None));
+        Ok(effects)
     }
 
     /// Asks a lead for a fresh estimate: it keeps its last one until it answers. Only while the
@@ -401,14 +428,65 @@ impl Cycle {
         let done = h.clone();
         let mut effects = Vec::new();
         if first {
-            effects.push(Effect::Ready {
-                handover: done.id.clone(),
-                board: done.board.clone(),
-                thread: done.thread.clone(),
-            });
+            effects.push(ready_effect(&done));
             effects.extend(self.check_ready(use_now));
         }
         Ok((done, effects))
+    }
+
+    /// Settles a lead that still owes its handover: ready with `file`, or cut off without one.
+    fn settle(
+        &mut self,
+        (board, thread): (&str, &str),
+        (state, file, via): (HandoverState, Option<&str>, Via),
+        (use_now, now): (Option<f64>, &str),
+    ) -> Result<Vec<Effect>, ProtocolError> {
+        let h = self.open_handover(board, thread)?;
+        if !h.state.is_pending() {
+            return Err(ProtocolError::Finished(h.state));
+        }
+        h.state = state;
+        h.file = file.map(str::to_owned);
+        h.via = Some(via);
+        let mut effects = Vec::new();
+        if state == HandoverState::Ready {
+            h.ready_at = Some(now.to_owned());
+            effects.push(ready_effect(h));
+        }
+        effects.extend(self.check_ready(use_now));
+        Ok(effects)
+    }
+
+    /// The owner skips one lead's wait: with the handover `file` the lead is ready, without one
+    /// it is cut off. The Overlord gets the ready notice, and the last skip readies the cycle.
+    ///
+    /// # Errors
+    /// The lead is not in the cycle, the cycle is closed, or the lead owes nothing any more.
+    pub fn skip_lead(
+        &mut self,
+        lead: (&str, &str),
+        file: Option<&str>,
+        at: (Option<f64>, &str),
+    ) -> Result<Vec<Effect>, ProtocolError> {
+        let state = if file.is_some() {
+            HandoverState::Ready
+        } else {
+            HandoverState::CutOff
+        };
+        self.settle(lead, (state, file, Via::Owner), at)
+    }
+
+    /// A lead that went idle with a current handover file counts as ready.
+    ///
+    /// # Errors
+    /// The lead is not in the cycle, the cycle is closed, or the lead owes nothing any more.
+    pub fn confirm_idle(
+        &mut self,
+        lead: (&str, &str),
+        file: &str,
+        at: (Option<f64>, &str),
+    ) -> Result<Vec<Effect>, ProtocolError> {
+        self.settle(lead, (HandoverState::Ready, Some(file), Via::Idle), at)
     }
 
     /// Whether no lead owes its handover any more.
@@ -487,7 +565,9 @@ impl Cycle {
 // test-tag: critical
 #[cfg(test)]
 mod tests {
-    use super::super::records::{AgentStop, CycleMode, CyclePhase, Estimate, HandoverState, Lead};
+    use super::super::records::{
+        AgentStop, CycleMode, CyclePhase, Estimate, HandoverState, Lead, Via,
+    };
     use super::{Cycle, Effect, ProtocolError, Start, WakeKind, start};
 
     const NOW: &str = "2026-11-11T10:00:00.000Z";
@@ -503,6 +583,14 @@ mod tests {
                 branch: Some("wip".into()),
                 stop: None,
             }],
+            handed_over: None,
+        }
+    }
+
+    fn idle_lead(board: &str) -> Lead {
+        Lead {
+            handed_over: Some(format!("{board}/handover.md")),
+            ..lead(board)
         }
     }
 
@@ -773,6 +861,111 @@ mod tests {
         assert_eq!(c.phase, CyclePhase::Done);
         assert!(c.mark_resumed("H-2", true).is_err());
         assert!(c.mark_resumed("H-9", true).is_err());
+    }
+
+    fn started(mode: CycleMode, leads: &[Lead]) -> (Cycle, Vec<Effect>) {
+        let mut n = 0;
+        start(spec(mode), leads, || {
+            n += 1;
+            format!("H-{n}")
+        })
+    }
+
+    fn ready_notices(effects: &[Effect]) -> usize {
+        effects
+            .iter()
+            .filter(|e| matches!(e, Effect::Ready { .. }))
+            .count()
+    }
+
+    #[test]
+    fn an_idle_lead_with_a_current_handover_starts_ready_via_idle_with_no_wake() {
+        let (c, effects) = started(CycleMode::Fixed, &[idle_lead("rotp"), lead("brock")]);
+        let idle = &c.leads[0];
+        assert_eq!(idle.state, HandoverState::Ready);
+        assert_eq!(idle.via, Some(Via::Idle));
+        assert_eq!(idle.file.as_deref(), Some("rotp/handover.md"));
+        assert_eq!(idle.ready_at.as_deref(), Some(NOW));
+        assert_eq!(idle.asked_at, None);
+        assert_eq!(kinds(&effects), [WakeKind::Request]);
+        assert_eq!(ready_notices(&effects), 1);
+        assert_eq!(c.phase, CyclePhase::Asked);
+        let (auto, effects) = started(CycleMode::Auto, &[idle_lead("rotp")]);
+        assert_eq!(kinds(&effects).len(), 0);
+        assert_eq!(auto.leads[0].estimate_asked_at, None);
+    }
+
+    #[test]
+    fn a_now_cycle_of_only_idle_leads_is_ready_at_once() {
+        let (c, effects) = started(CycleMode::Now, &[idle_lead("rotp"), idle_lead("brock")]);
+        assert_eq!(c.phase, CyclePhase::Ready);
+        assert_eq!(ready_events(&effects), 1);
+        assert_eq!(kinds(&effects).len(), 0);
+    }
+
+    #[test]
+    fn an_idle_lead_added_to_an_asked_cycle_is_ready_without_a_wake() {
+        let (mut c, _) = cycle(CycleMode::Now, &["rotp"]);
+        let effects = c.add_lead(&idle_lead("brock"), "H-2".into(), NOW).unwrap();
+        assert_eq!(kinds(&effects).len(), 0);
+        assert_eq!(ready_notices(&effects), 1);
+        assert_eq!(c.leads[1].via, Some(Via::Idle));
+        assert_eq!(c.phase, CyclePhase::Asked);
+    }
+
+    #[test]
+    fn skipping_a_lead_with_a_file_makes_it_ready_via_the_owner() {
+        let (mut c, _) = cycle(CycleMode::Now, &["rotp", "brock"]);
+        let at = (Some(96.0), NOW);
+        let effects = c.skip_lead(("rotp", "lead"), Some("rotp.md"), at).unwrap();
+        let h = &c.leads[0];
+        assert_eq!(h.state, HandoverState::Ready);
+        assert_eq!(h.via, Some(Via::Owner));
+        assert_eq!(h.file.as_deref(), Some("rotp.md"));
+        assert_eq!(h.ready_at.as_deref(), Some(NOW));
+        assert_eq!(ready_notices(&effects), 1);
+        assert_eq!(ready_events(&effects), 0);
+    }
+
+    #[test]
+    fn skipping_a_lead_without_a_file_cuts_it_off_and_the_last_skip_readies_the_cycle() {
+        let (mut c, _) = cycle(CycleMode::Now, &["rotp", "brock"]);
+        c.skip_lead(("rotp", "lead"), Some("rotp.md"), (None, NOW)).unwrap();
+        let effects = c.skip_lead(("brock", "lead"), None, (Some(97.0), NOW)).unwrap();
+        let h = &c.leads[1];
+        assert_eq!((h.state, h.via), (HandoverState::CutOff, Some(Via::Owner)));
+        assert_eq!(h.file, None);
+        assert_eq!(ready_notices(&effects), 0);
+        assert_eq!(ready_events(&effects), 1);
+        assert_eq!(c.phase, CyclePhase::Ready);
+        assert_eq!(c.use_at_ready, Some(97.0));
+    }
+
+    #[test]
+    fn a_skip_of_a_ready_lead_or_a_closed_cycle_is_refused_and_an_unknown_lead_is_not_found() {
+        let (mut c, _) = cycle(CycleMode::Now, &["rotp", "brock"]);
+        let at = (None, NOW);
+        c.on_ready("rotp", "lead", "a.md", Vec::new(), at).unwrap();
+        let ready = c.skip_lead(("rotp", "lead"), None, at).unwrap_err();
+        assert_eq!(ready, ProtocolError::Finished(HandoverState::Ready));
+        assert_eq!(ready.status(), 409);
+        let unknown = c.skip_lead(("tessera", "lead"), None, at).unwrap_err();
+        assert_eq!(unknown.status(), 404);
+        c.cut_off_rest(None);
+        let closed = c.skip_lead(("brock", "lead"), None, at).unwrap_err();
+        assert_eq!(closed.status(), 409);
+    }
+
+    #[test]
+    fn confirming_an_idle_lead_makes_it_ready_via_idle_once() {
+        let (mut c, _) = cycle(CycleMode::Now, &["rotp"]);
+        let at = (Some(96.0), NOW);
+        let effects = c.confirm_idle(("rotp", "lead"), "idle.md", at).unwrap();
+        assert_eq!(c.leads[0].via, Some(Via::Idle));
+        assert_eq!(c.leads[0].file.as_deref(), Some("idle.md"));
+        assert_eq!(ready_events(&effects), 1);
+        let again = c.confirm_idle(("rotp", "lead"), "idle.md", at).unwrap_err();
+        assert_eq!(again.status(), 409);
     }
 
     #[test]

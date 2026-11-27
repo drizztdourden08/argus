@@ -142,6 +142,11 @@ pub trait Threads: Send + Sync {
     fn project_name(&self, _board: &str) -> Option<String> {
         None
     }
+    /// The handover file of a lead that is idle with a current handover, when it has one. A port
+    /// that cannot tell answers with none.
+    fn handed_over(&self, _board: &str, _thread: &str) -> Option<String> {
+        None
+    }
 }
 
 /// Where the handover cycle and its counters are kept.
