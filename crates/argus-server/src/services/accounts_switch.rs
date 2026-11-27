@@ -24,6 +24,7 @@ use tokio::sync::broadcast::Receiver;
 
 use super::AccountsService;
 use super::accounts_handover::{Handovers, use_now};
+use super::accounts_switch_check::check_sidebars;
 use super::accounts_switch_log::{
     Line, LineState, Stage, stage_of, step_lines, sync_info, sync_note,
 };
@@ -407,9 +408,7 @@ impl Prepared {
         let done = result?;
         if done == Done::Switched {
             let _ =
-                tokio::task::spawn_blocking(move || {
-                    super::accounts_switch_check::check_sidebars(&svc, &accounts, &ends, &id);
-                })
+                tokio::task::spawn_blocking(move || check_sidebars(&svc, &accounts, &ends, &id))
                     .await;
         }
         Ok(())
