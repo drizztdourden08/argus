@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind barrel */
 export { atZeroText } from './at-zero-text';
 export { canCancel } from './can-cancel';
+export { canSkip } from './can-skip';
 export { countdownText } from './countdown-text';
 export { countsText } from './counts-text';
 export { detectDone } from './detect-done';
@@ -9,4 +10,5 @@ export { processTitle } from './process-title';
 export { readyText } from './ready-text';
 export { resultLine } from './result-line';
 export { stageViews } from './stage-views';
+export { wizardSteps } from './wizard-steps';
 export { toMs } from './to-ms';
