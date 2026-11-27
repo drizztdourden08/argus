@@ -23,7 +23,7 @@ fn full_key(name: &str) -> Vec<u8> {
     key
 }
 
-/// The text of a stored flag, without the quotes a JSON writer would put round it.
+/// The text of a stored flag: Latin-1 (`01` plus ASCII) or UTF-16LE (`00` plus units).
 fn flag_text(raw: &[u8]) -> Option<String> {
     let (&enc, body) = raw.split_first()?;
     let text = if enc == 0 {
@@ -35,7 +35,7 @@ fn flag_text(raw: &[u8]) -> Option<String> {
     } else {
         body.iter().map(|&b| char::from(b)).collect()
     };
-    Some(text.trim_matches('"').to_owned())
+    Some(text)
 }
 
 impl Storage {

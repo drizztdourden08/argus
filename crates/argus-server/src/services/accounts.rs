@@ -3,7 +3,7 @@
 //! pieces and hang their work on [`AccountsService`].
 
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock, PoisonError, RwLock};
 use std::time::Duration;
 
@@ -62,6 +62,9 @@ pub struct AccountsOptions {
     pub desktop: Option<DesktopFactory>,
     /// Another wait before the sidebar check than [`SIDEBAR_SETTLE`].
     pub sidebar_settle: Option<Duration>,
+    /// Another home folder of the user than the real one, for `.claude` (transcripts and the
+    /// scheduled tasks).
+    pub user_home: Option<PathBuf>,
 }
 
 impl Default for AccountsOptions {
@@ -74,6 +77,7 @@ impl Default for AccountsOptions {
             credentials: None,
             desktop: None,
             sidebar_settle: None,
+            user_home: None,
         }
     }
 }
@@ -99,6 +103,7 @@ pub struct AccountsService {
     pub(crate) refusals: super::accounts_limit::Refusals,
     desktop: DesktopFactory,
     sidebar_settle: Duration,
+    user_home: Option<PathBuf>,
 }
 
 /// The outside world of the usage poll.
@@ -144,6 +149,7 @@ impl AccountsService {
                 Arc::new(ClaudeDesktop::new(app))
             }),
             sidebar_settle: SIDEBAR_SETTLE,
+            user_home: None,
         }
     }
 
@@ -154,12 +160,24 @@ impl AccountsService {
             self.desktop = Arc::clone(desktop);
         }
         self.sidebar_settle = options.sidebar_settle.unwrap_or(self.sidebar_settle);
+        self.user_home.clone_from(&options.user_home);
         self
     }
 
     /// The desktop app of the app data folder `app`.
     pub(crate) fn desktop(&self, app: &Path) -> Arc<dyn DesktopApp> {
         (self.desktop)(app)
+    }
+
+    /// The `.claude` folder of the user: the seam's home, else the real profile.
+    pub(crate) fn user_claude(&self) -> PathBuf {
+        let home = self.user_home.clone().unwrap_or_else(|| {
+            let real = std::env::var("USERPROFILE")
+                .or_else(|_| std::env::var("HOME"))
+                .unwrap_or_default();
+            PathBuf::from(real)
+        });
+        home.join(".claude")
     }
 
     /// How long the sidebar check waits after a switch.

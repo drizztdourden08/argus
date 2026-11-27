@@ -116,10 +116,14 @@ fn limits(tray: bool) -> Limits {
     }
 }
 
-fn tweak(app: &Arc<ProcessApp>) -> Tweak {
+/// Everything outside the temp folder is cut off: the user's `.claude` is the temp `user`
+/// folder, the coord home and boards are the server's throwaway ones, and no toast is shown.
+fn tweak(app: &Arc<ProcessApp>, user_home: PathBuf) -> Tweak {
     let app = Arc::clone(app);
     Arc::new(move |opts: &mut ServeOptions| {
         opts.mode = ServeMode::Live;
+        opts.notify.enabled = false;
+        opts.notify.system = false;
         let accounts = &mut opts.accounts;
         accounts.enabled = true;
         accounts.timer = false;
@@ -127,6 +131,7 @@ fn tweak(app: &Arc<ProcessApp>) -> Tweak {
         accounts.usage = Some(Arc::new(FlatUsage));
         accounts.credentials = Some(Arc::new(FakeLogins));
         accounts.sidebar_settle = Some(Duration::from_millis(300));
+        accounts.user_home = Some(user_home.clone());
         let shared = Arc::clone(&app);
         accounts.desktop = Some(Arc::new(move |_app: &Path| -> Arc<dyn DesktopApp> {
             Arc::clone(&shared)
@@ -150,6 +155,7 @@ impl Drop for Rig {
 
 async fn rig(tray: bool, force_quit: bool) -> Rig {
     let dir = tempfile::tempdir().expect("dir");
+    let user_home = dir.path().join("user");
     let dashboard = dir.path().join("dashboard");
     let logins = dashboard.join("accounts").join("logins");
     let home = SimHome::build(dir.path(), &logins);
@@ -158,7 +164,7 @@ async fn rig(tray: bool, force_quit: bool) -> Rig {
     let t = TestServer::start(TestOptions {
         config: home.accounts_setting(force_quit),
         dashboard_home: Some(dashboard),
-        tweak: Some(tweak(&app)),
+        tweak: Some(tweak(&app, user_home)),
         ..TestOptions::default()
     })
     .await;
@@ -179,11 +185,20 @@ fn ended(doc: &Value) -> bool {
     matches!(doc["phase"].as_str(), Some("done" | "failed" | "cancelled"))
 }
 
-/// Asks for the switch as the page does and waits (up to twenty seconds) for its doc to end.
-async fn switch_to(r: &Rig, to: &str) -> Value {
-    let ask = Request::new("POST", "/api/accounts/switch").json(&json!({ "to": to }));
+async fn ask_switch(r: &Rig, to: &str, handover: bool) {
+    let body = json!({ "to": to, "handover": handover });
+    let ask = Request::new("POST", "/api/accounts/switch").json(&body);
     let reply = r.t.send(r.t.page(ask)).await;
     assert_eq!(reply.status, 202, "{}", reply.text());
+}
+
+/// Asks for the switch as the page does and waits (up to twenty seconds) for its doc to end.
+async fn switch_to(r: &Rig, to: &str) -> Value {
+    ask_switch(r, to, false).await;
+    wait_end(r).await
+}
+
+async fn wait_end(r: &Rig) -> Value {
     let t = &r.t;
     until("the switch to end", || async move {
         switch_doc(t).filter(ended)
@@ -201,7 +216,7 @@ async fn a_switch_closes_the_app_swaps_the_login_and_starts_it_as_the_other_acco
     assert_eq!(r.home.signed_in(), ACCOUNT_A);
     let doc = switch_to(&r, SECOND).await;
     // The sidebar check reads the store after the fake Claude reconciled it at its start.
-    // I-259: it passes only when Argus leaves the flags Claude reads (`ccd-sync-owner` and
+    // I-259 (flags.rs, branch i259a): drift is 0 only once that branch is merged; it passes only when Argus leaves the flags Claude reads (`ccd-sync-owner` and
     // `ccd-sync-org` set to the target, `ccd-sync-pending:ccd/dframe-store` "1", the pending
     // base removed). Without them the fake takes the server copy and the check fails with the
     // folders of the first account missing again.
@@ -245,4 +260,22 @@ async fn a_tray_app_is_ended_by_its_own_pid_with_force_quit_and_the_switch_goes_
     );
     assert_eq!(r.home.signed_in(), ACCOUNT_B, "the login was swapped: {doc}");
     assert!(r.app.is_running(), "Claude was started again");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_switch_with_handover_asks_the_fake_lead_in_the_temp_home_and_goes_on_when_cut_off() {
+    let r = rig(false, true).await;
+    ask_switch(&r, SECOND, true).await;
+    let t = &r.t;
+    let waiting = until("the handover wait or the end", || async move {
+        switch_doc(t).filter(|d| ended(d) || d["phase"] == "handover")
+    })
+    .await;
+    if !ended(&waiting) {
+        let cut = Request::new("POST", "/api/accounts/switch/anyway");
+        assert_eq!(r.t.send(r.t.page(cut)).await.status, 200);
+    }
+    let doc = wait_end(&r).await;
+    assert_eq!(doc["phase"], "done", "the switch doc: {doc}");
+    assert_eq!(r.home.signed_in(), ACCOUNT_B);
 }
