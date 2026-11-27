@@ -136,7 +136,7 @@ fn tweak(app: &Arc<ProcessApp>, user_home: PathBuf) -> Tweak {
         accounts.credentials = Some(Arc::new(FakeLogins));
         accounts.sidebar_settle = Some(Duration::from_millis(300));
         accounts.user_home = Some(user_home.clone());
-        let shared: Arc<dyn DesktopApp> = Arc::clone(&app);
+        let shared: Arc<dyn DesktopApp> = app.clone();
         accounts.desktop = Some(Arc::new(move |_app: &Path| -> Arc<dyn DesktopApp> {
             Arc::clone(&shared)
         }));
