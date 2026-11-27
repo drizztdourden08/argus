@@ -836,7 +836,7 @@ mod tests {
 
     #[test]
     fn a_lead_ready_before_the_ask_point_is_not_asked_again() {
-        let (mut c, _) = cycle(CycleMode::Now, &["rotp", "brock"]);
+        let (mut c, _) = cycle(CycleMode::Auto, &["rotp", "brock"]);
         c.on_ready("rotp", "lead", "a.md", Vec::new(), (None, NOW))
             .unwrap();
         assert_eq!(
@@ -1019,8 +1019,8 @@ mod tests {
         assert!(c.cancel());
         let states: Vec<_> = c.leads.iter().map(|h| h.state).collect();
         assert_eq!(states, [HandoverState::Resumed, HandoverState::Resumed]);
-        let status = c.on_status("rotp", "lead").unwrap();
-        assert_eq!(status.state, HandoverState::Resumed);
+        let answer = c.on_status("rotp", "lead").unwrap();
+        assert_eq!(answer.state, HandoverState::Resumed);
     }
 
     #[test]
