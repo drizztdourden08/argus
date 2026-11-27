@@ -240,6 +240,12 @@ impl Desk {
         self.threads.agent_loads(board, thread)
     }
 
+    /// The display name of the project a board belongs to, when the boards know it.
+    #[must_use]
+    pub fn project_name(&self, board: &str) -> Option<String> {
+        self.threads.project_name(board)
+    }
+
     /// Asks a lead of the estimating cycle for a fresh estimate.
     ///
     /// # Errors

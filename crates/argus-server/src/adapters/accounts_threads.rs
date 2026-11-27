@@ -142,6 +142,15 @@ impl Threads for BoardThreads {
             .unwrap_or_default()
     }
 
+    fn project_name(&self, board: &str) -> Option<String> {
+        self.boards
+            .projects()
+            .into_iter()
+            .find(|p| p.key == board)
+            .map(|p| p.name)
+            .filter(|n| !n.is_empty())
+    }
+
     fn notice(&self, subject: &str, text: &str) -> Result<(), String> {
         let (Some(main), Some(overlord)) = (self.boards.overlord(), self.boards.overlord_thread())
         else {

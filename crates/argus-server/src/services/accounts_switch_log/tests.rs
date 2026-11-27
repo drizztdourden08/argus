@@ -159,7 +159,7 @@ fn the_handover_phase_names_the_leads_it_waits_for() {
             handover("builder", HandoverState::Ready),
         ],
     );
-    log.set_threads(threads_of(&found));
+    log.set_threads(threads_of(&found, &|_| None));
     let shown = log.stamp(doc("handover"), 1);
     assert_eq!(shown["phase"], "handover");
     assert_eq!(shown["threads"][0]["state"], "asked");
@@ -295,4 +295,13 @@ fn a_resume_goes_to_the_resume_lines() {
         ["rotp/lead resumed on the new account."]
     );
     assert_eq!(out.resume[0].stage, Stage::Verify);
+}
+
+#[test]
+fn a_lead_row_is_titled_with_its_project_name_or_the_thread() {
+    let found = cycle(CyclePhase::Asked, vec![handover("lead", HandoverState::Asked)]);
+    let named = threads_of(&found, &|_| Some("Argus".to_owned()));
+    assert_eq!(named[0]["title"], "Argus lead");
+    let unnamed = threads_of(&found, &|_| None);
+    assert_eq!(unnamed[0]["title"], "lead");
 }
