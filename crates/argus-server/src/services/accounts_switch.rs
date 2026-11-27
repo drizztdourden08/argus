@@ -267,7 +267,7 @@ pub fn prepare(
     }
     let leftover = match repair(
         &journal_of(svc),
-        &accounts.desktop(&app),
+        &*accounts.desktop(&app),
         &vault,
         &config.accounts,
     )? {
@@ -467,7 +467,7 @@ impl Prepared {
         let mut told = false;
         let done = argus_accounts::desktop::run(
             &plan,
-            &desktop,
+            &*desktop,
             &vault,
             &stages,
             &|| self.control.last_call(),
@@ -812,7 +812,7 @@ pub(crate) fn repair_interrupted(svc: &Services, accounts: &AccountsService) {
     refresh_version(accounts, &app);
     let journal = journal_of(svc);
     let vault = FsVault::new(&app, &logins_root(svc));
-    match repair(&journal, &accounts.desktop(&app), &vault, &config.accounts) {
+    match repair(&journal, &*accounts.desktop(&app), &vault, &config.accounts) {
         Ok(Repair::Clean) => {}
         Ok(Repair::Repaired { from }) => svc.log.warn(
             "accounts interrupted switch repaired",
