@@ -5,6 +5,7 @@ use crate::Router;
 
 pub mod accounts;
 pub mod accounts_handover;
+pub mod accounts_override;
 pub mod accounts_review;
 pub mod accounts_switch;
 pub mod accounts_tray;
@@ -78,6 +79,7 @@ pub fn register_all(router: &mut Router) {
     procs::register(router);
     accounts::register(router);
     accounts_handover::register(router);
+    accounts_override::register(router);
     accounts_review::register(router);
     accounts_switch::register(router);
     accounts_tray::register(router);

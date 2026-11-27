@@ -320,6 +320,7 @@ mod tests {
             estimate_asked_at: None,
             asked_at: None,
             ready_at: None,
+            via: None,
         }
     }
 

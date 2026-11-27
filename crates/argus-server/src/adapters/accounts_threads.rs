@@ -2,11 +2,13 @@
 //! through the wake engine, and the cycle kept in the kv store and shown as docs of
 //! `_portfolio` (the `cycle` doc of `AccountsState`, one `Handovers` doc per lead).
 
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use std::time::UNIX_EPOCH;
 
 use argus_accounts::handover::{AgentLoad, AgentStop, Cycle, Lead, READY_REASON, WakeKind};
 use argus_accounts::{Clock, HandoverStore, Threads};
-use argus_core::clock::now_ms;
+use argus_core::clock::{now_ms, parse_ms};
 use argus_core::ids::PORTFOLIO;
 use argus_core::{Coll, DocChange};
 use argus_store::Db;
@@ -17,6 +19,11 @@ use crate::services::{WakeHook, WakeRequest};
 
 const CYCLE_KEY: &str = "accounts.handover.cycle";
 const COUNTER_PREFIX: &str = "accounts.handover.";
+/// The file a lead writes its handover to, under its board's folder of the coord home.
+const HANDOVER_FILE: &str = "handover.md";
+/// How long after its handover file a lead's last sign of life may be: the stop hook of the
+/// turn that wrote it comes a little later.
+const SEEN_SLACK_MS: i64 = 3 * 60 * 1000;
 
 /// The clock of the server.
 pub struct SystemNow;
@@ -32,18 +39,74 @@ pub struct BoardThreads {
     boards: BoardReader,
     wake: WakeHook,
     clock: Arc<dyn Clock>,
+    coord_home: PathBuf,
 }
 
 impl BoardThreads {
-    /// The leads of the boards the reader knows, woken through `wake`.
+    /// The leads of the boards the reader knows, woken through `wake`; handover files are looked
+    /// for under `coord_home`.
     #[must_use]
-    pub fn new(boards: BoardReader, wake: WakeHook, clock: Arc<dyn Clock>) -> Self {
+    pub fn new(
+        boards: BoardReader,
+        wake: WakeHook,
+        clock: Arc<dyn Clock>,
+        coord_home: PathBuf,
+    ) -> Self {
         BoardThreads {
             boards,
             wake,
             clock,
+            coord_home,
         }
     }
+}
+
+/// A lead's handover file and when it was last written (epoch ms).
+struct HandoverFile {
+    path: String,
+    mtime: i64,
+}
+
+/// The handover file of a board, when it exists.
+fn handover_file(coord_home: &Path, board: &str) -> Option<HandoverFile> {
+    let path = coord_home.join(board).join(HANDOVER_FILE);
+    let modified = std::fs::metadata(&path).ok()?.modified().ok()?;
+    let mtime = i64::try_from(modified.duration_since(UNIX_EPOCH).ok()?.as_millis()).ok()?;
+    Some(HandoverFile {
+        path: path.to_string_lossy().into_owned(),
+        mtime,
+    })
+}
+
+/// Whether a lead is idle with a current handover: not in a turn, and no sign of work (its last
+/// sign of life less the slack, each live agent's last update, all in epoch ms) after the file.
+fn handed_over(thread: &ThreadView, agent_updates: &[i64], file_mtime: i64, now: i64) -> bool {
+    if thread.in_turn(now) {
+        return false;
+    }
+    let seen = parse_ms(thread.last_seen.as_str()).unwrap_or(0);
+    seen - SEEN_SLACK_MS <= file_mtime && agent_updates.iter().all(|at| *at <= file_mtime)
+}
+
+/// When each live agent of a lead last changed (epoch ms; unknown counts as long ago).
+fn agent_updates(board: &BoardView, lead: &str) -> Vec<i64> {
+    board
+        .agents
+        .values()
+        .filter(|a| a.rec.is_live() && a.thread.is(lead) && a.status.is_any(&LIVE_AGENT))
+        .map(|a| parse_ms(a.rec.updated_at.as_str()).unwrap_or(0))
+        .collect()
+}
+
+/// The handover file of the lead of a board when the lead is idle with a current handover.
+fn idle_handover(
+    board: &BoardView,
+    lead: (&str, &ThreadView),
+    file: Option<&HandoverFile>,
+    now: i64,
+) -> Option<String> {
+    let file = file?;
+    handed_over(lead.1, &agent_updates(board, lead.0), file.mtime, now).then(|| file.path.clone())
 }
 
 /// The lead of a board when it is a live, unpaused Desktop session. A hosted one (run by
@@ -94,7 +157,12 @@ fn live_loads(board: &BoardView, lead: &str) -> Vec<AgentLoad> {
 }
 
 /// The lead of a board when it is working at `now`: inside a turn, or with a live agent.
-fn working_lead(key: &str, board: &BoardView, now: i64) -> Option<Lead> {
+fn working_lead(
+    key: &str,
+    board: &BoardView,
+    now: i64,
+    file: Option<&HandoverFile>,
+) -> Option<Lead> {
     let (id, thread) = live_lead(board)?;
     let agents = live_agents(board, &id);
     if !thread.in_turn(now) && agents.is_empty() {
@@ -107,6 +175,7 @@ fn working_lead(key: &str, board: &BoardView, now: i64) -> Option<Lead> {
         session_id: raw["sessionId"].as_str().map(str::to_owned),
         link: raw["link"].as_str().map(str::to_owned),
         agents,
+        handed_over: idle_handover(board, (&id, thread), file, now),
     })
 }
 
@@ -119,7 +188,8 @@ impl Threads for BoardThreads {
             .filter(|p| p.has_board)
             .filter_map(|p| {
                 let raw = self.boards.board(&p.key)?;
-                working_lead(&p.key, &BoardView::from_json(raw), now)
+                let file = handover_file(&self.coord_home, &p.key);
+                working_lead(&p.key, &BoardView::from_json(raw), now, file.as_ref())
             })
             .collect()
     }
@@ -149,6 +219,16 @@ impl Threads for BoardThreads {
             .find(|p| p.key == board)
             .map(|p| p.name)
             .filter(|n| !n.is_empty())
+    }
+
+    fn handed_over(&self, board: &str, thread: &str) -> Option<String> {
+        let view = BoardView::from_json(self.boards.board(board)?);
+        let (id, lead) = live_lead(&view)?;
+        if id != thread {
+            return None;
+        }
+        let file = handover_file(&self.coord_home, board);
+        idle_handover(&view, (&id, lead), file.as_ref(), self.clock.now_ms())
     }
 
     fn notice(&self, subject: &str, text: &str) -> Result<(), String> {
@@ -223,7 +303,7 @@ mod tests {
     use argus_wake::board::BoardView;
     use serde_json::json;
 
-    use super::working_lead;
+    use super::{HandoverFile, handed_over, working_lead};
 
     const NOW: i64 = 1_762_855_200_000;
 
@@ -242,24 +322,59 @@ mod tests {
 
     #[test]
     fn a_lead_inside_a_turn_is_working() {
-        let lead = working_lead("rotp", &board("working", 60_000, "done"), NOW).unwrap();
+        let lead = working_lead("rotp", &board("working", 60_000, "done"), NOW, None).unwrap();
         assert_eq!(lead.session_id.as_deref(), Some("s-1"));
         assert_eq!(lead.agents.len(), 0);
     }
 
     #[test]
     fn a_lead_with_a_live_agent_is_working_and_lists_it() {
-        let lead = working_lead("rotp", &board("idle", 3_600_000, "working"), NOW).unwrap();
+        let lead = working_lead("rotp", &board("idle", 3_600_000, "working"), NOW, None).unwrap();
         assert_eq!(lead.agents[0].id, "A-1");
         assert_eq!(lead.agents[0].branch.as_deref(), Some("wip/a"));
     }
 
     #[test]
     fn an_idle_lead_is_left_out() {
-        assert!(working_lead("rotp", &board("idle", 60_000, "done"), NOW).is_none());
+        assert!(working_lead("rotp", &board("idle", 60_000, "done"), NOW, None).is_none());
         assert!(
-            working_lead("rotp", &board("working", 600_000, "done"), NOW).is_none(),
+            working_lead("rotp", &board("working", 600_000, "done"), NOW, None).is_none(),
             "a working flag with no sign of life for ten minutes is not a turn"
         );
+    }
+
+    fn thread(activity: &str, seen_ago_ms: i64) -> argus_wake::board::ThreadView {
+        let board = board(activity, seen_ago_ms, "done");
+        board.threads["lead"].clone()
+    }
+
+    #[test]
+    fn an_idle_lead_with_a_file_after_its_work_is_handed_over() {
+        let idle = thread("idle", 60_000);
+        assert!(handed_over(&idle, &[], NOW - 30_000, NOW));
+        assert!(handed_over(&idle, &[NOW - 40_000], NOW - 30_000, NOW));
+    }
+
+    #[test]
+    fn a_lead_in_a_turn_or_an_agent_updated_after_the_file_is_not_handed_over() {
+        let working = thread("working", 60_000);
+        assert!(!handed_over(&working, &[], NOW, NOW));
+        let idle = thread("idle", 60_000);
+        assert!(!handed_over(&idle, &[NOW - 10_000], NOW - 30_000, NOW));
+        let busy_since = thread("idle", 10_000);
+        assert!(!handed_over(&busy_since, &[], NOW - 600_000, NOW));
+    }
+
+    #[test]
+    fn the_working_lead_carries_the_file_only_when_it_is_handed_over() {
+        let file = HandoverFile {
+            path: "h.md".to_owned(),
+            mtime: NOW - 30_000,
+        };
+        let idle = board("idle", 60_000, "working");
+        let lead = working_lead("rotp", &idle, NOW, Some(&file)).unwrap();
+        assert_eq!(lead.handed_over.as_deref(), Some("h.md"));
+        let none = working_lead("rotp", &idle, NOW, None).unwrap();
+        assert_eq!(none.handed_over, None);
     }
 }

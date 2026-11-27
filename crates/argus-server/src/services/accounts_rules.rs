@@ -89,6 +89,8 @@ pub(crate) trait World: Send + Sync {
     async fn learn(&self, cycle_id: &str);
     /// Switches the Desktop app to `to`; returns when the switch is over.
     async fn switch(&self, to: &str, handover: bool) -> Result<(), String>;
+    /// Counts the leads of an open cycle that went idle with a current handover as ready.
+    async fn sweep_idle(&self) {}
     /// Whether a switch runs now, whoever started it.
     fn switching(&self) -> bool;
     /// Logs something that went wrong.
@@ -187,6 +189,7 @@ impl RulesDesk {
             if state.switching || self.world.switching() {
                 return;
             }
+            self.world.sweep_idle().await;
             let snapshot = self.world.snapshot().await;
             let decisions = self.decisions(&state, &snapshot);
             self.apply(&mut state, &snapshot, decisions).await
@@ -510,6 +513,21 @@ impl RulesDesk {
         true
     }
 
+    /// The owner skips the grace minute: the running countdown ends now, the usage is read again
+    /// and the rules re-check as at any end of a countdown. Returns whether a countdown ran.
+    pub(crate) async fn skip(&self) -> bool {
+        {
+            let mut state = self.state.lock().await;
+            let Some(running) = state.countdown.as_mut() else {
+                return false;
+            };
+            running.countdown.ends_at_ms = self.clock.now_ms();
+        }
+        self.world.refresh().await;
+        self.evaluate().await;
+        true
+    }
+
     /// A cycle became ready: learn from it, then see whether the countdown starts.
     async fn on_event(&self, event: CycleEvent) {
         let fresh = {
@@ -607,6 +625,15 @@ pub(crate) async fn cancel_countdown(accounts: &AccountsService) -> bool {
 pub(crate) async fn end_countdown(accounts: &AccountsService) -> bool {
     match accounts.rules.get() {
         Some(desk) => desk.end().await,
+        None => false,
+    }
+}
+
+/// Ends the grace minute of a rule's countdown now, for the owner's skip. Returns whether a
+/// countdown ran.
+pub(crate) async fn skip_countdown(accounts: &AccountsService) -> bool {
+    match accounts.rules.get() {
+        Some(desk) => desk.skip().await,
         None => false,
     }
 }

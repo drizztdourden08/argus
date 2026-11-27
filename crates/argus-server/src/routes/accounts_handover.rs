@@ -26,7 +26,7 @@ const NOTE_MAX: usize = 300;
 const FILE_MAX: usize = 400;
 const AGENTS_MAX: usize = 50;
 
-fn services(ctx: &Ctx) -> Result<(Arc<AccountsService>, Arc<Handovers>), ApiError> {
+pub(super) fn services(ctx: &Ctx) -> Result<(Arc<AccountsService>, Arc<Handovers>), ApiError> {
     let accounts = ctx
         .svc
         .accounts
@@ -38,7 +38,7 @@ fn services(ctx: &Ctx) -> Result<(Arc<AccountsService>, Arc<Handovers>), ApiErro
     Ok((accounts, handovers))
 }
 
-fn desk_error(e: &DeskError) -> ApiError {
+pub(super) fn desk_error(e: &DeskError) -> ApiError {
     let code = match e.status() {
         400 => ErrorCode::BadRequest,
         404 => ErrorCode::NotFound,
@@ -48,7 +48,7 @@ fn desk_error(e: &DeskError) -> ApiError {
     ApiError::new(code, e.to_string())
 }
 
-fn text<'a>(body: &'a Value, key: &str) -> Option<&'a str> {
+pub(super) fn text<'a>(body: &'a Value, key: &str) -> Option<&'a str> {
     body.get(key)
         .and_then(Value::as_str)
         .filter(|t| !t.trim().is_empty())

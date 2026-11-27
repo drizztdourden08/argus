@@ -5,7 +5,7 @@
 
 use std::sync::Arc;
 
-use argus_accounts::binding_limit;
+use argus_accounts::{Threads, binding_limit};
 use argus_accounts::handover::{
     CycleEvent, Desk, DeskError, Lead, LeadAction, LeadReply, Outcome, StartRequest,
 };
@@ -23,15 +23,17 @@ const EVENTS: usize = 16;
 /// The desk and the senders of its events.
 pub struct Handovers {
     desk: Desk,
+    threads: Arc<dyn Threads>,
     events: broadcast::Sender<CycleEvent>,
 }
 
 impl Handovers {
     /// The desk over its ports.
     #[must_use]
-    pub fn new(desk: Desk) -> Self {
+    pub fn new(desk: Desk, threads: Arc<dyn Threads>) -> Self {
         Handovers {
             desk,
+            threads,
             events: broadcast::channel(EVENTS).0,
         }
     }
@@ -78,6 +80,19 @@ impl Handovers {
             &|board| self.desk.project_name(board),
         );
         out
+    }
+
+    /// The use of the cycle's account now, when the cycle and the poll are known.
+    fn cycle_use(&self, accounts: &AccountsService) -> Option<f64> {
+        self.desk
+            .cycle()
+            .and_then(|c| use_now(accounts, &c.account))
+    }
+
+    /// The handover file of a lead that is idle with a current handover, when it has one.
+    #[must_use]
+    pub fn handed_over(&self, lead: (&str, &str)) -> Option<String> {
+        self.threads.handed_over(lead.0, lead.1)
     }
 
     /// Starts a cycle. Blocking: wakes go through the wake engine.
@@ -139,6 +154,39 @@ impl Handovers {
         self.logged(accounts, |d| d.add_lead(lead, &defaults))
     }
 
+    /// The owner skips one lead's wait: ready with `file`, or cut off without one. Blocking.
+    ///
+    /// # Errors
+    /// See [`Desk::skip_lead`].
+    pub fn skip_lead(
+        &self,
+        lead: (&str, &str),
+        file: Option<&str>,
+        accounts: &AccountsService,
+    ) -> Result<Outcome, DeskError> {
+        let use_now = self.cycle_use(accounts);
+        self.published(self.logged(accounts, |d| d.skip_lead(lead, file, use_now)))
+    }
+
+    /// Counts every pending lead that went idle with a current handover as ready, and returns
+    /// how many it settled. The cycle may close with the last one. Blocking.
+    pub fn confirm_idle_sweep(&self, accounts: &AccountsService) -> usize {
+        let Some(cycle) = self.desk.cycle().filter(|c| c.phase.is_open()) else {
+            return 0;
+        };
+        let use_now = self.cycle_use(accounts);
+        let mut settled = 0;
+        for h in cycle.leads.iter().filter(|h| h.state.is_pending()) {
+            let lead = (h.board.as_str(), h.thread.as_str());
+            let Some(file) = self.handed_over(lead) else {
+                continue;
+            };
+            let done = self.logged(accounts, |d| d.confirm_idle(lead, &file, use_now));
+            settled += usize::from(self.published(done).is_ok());
+        }
+        settled
+    }
+
     /// A lead's request, with the use of the cycle's account now. Blocking.
     ///
     /// # Errors
@@ -149,10 +197,7 @@ impl Handovers {
         action: LeadAction,
         accounts: &AccountsService,
     ) -> Result<LeadReply, DeskError> {
-        let use_now = self
-            .desk
-            .cycle()
-            .and_then(|c| use_now(accounts, &c.account));
+        let use_now = self.cycle_use(accounts);
         let defaults = accounts.config().estimate_defaults;
         let reply = self.logged(accounts, |d| d.lead(lead, action, use_now, &defaults))?;
         self.publish(reply.event.as_ref());
@@ -189,11 +234,14 @@ pub(crate) fn attach(svc: &Services, accounts: &AccountsService) {
         svc.boards(),
         svc.wake_hook(),
         clock.clone(),
+        svc.paths.coord_home.clone(),
     ));
     let store = Arc::new(HandoverDocs::new(Arc::clone(&svc.db)));
-    match Desk::new(threads, store, clock) {
+    match Desk::new(Arc::clone(&threads) as Arc<dyn Threads>, store, clock) {
         Ok(desk) => {
-            let _ = accounts.handovers.set(Arc::new(Handovers::new(desk)));
+            let _ = accounts
+                .handovers
+                .set(Arc::new(Handovers::new(desk, threads)));
         }
         Err(e) => svc
             .log

@@ -55,7 +55,7 @@ fn tweak(mode: ServeMode, calls: &Arc<AtomicUsize>) -> Tweak {
     })
 }
 
-async fn start(shadow: bool, mode: ServeMode, dir: &Path, calls: &Arc<AtomicUsize>) -> TestServer {
+pub(super) async fn start(shadow: bool, mode: ServeMode, dir: &Path, calls: &Arc<AtomicUsize>) -> TestServer {
     TestServer::start(TestOptions {
         shadow,
         config: setup(dir),
@@ -65,17 +65,22 @@ async fn start(shadow: bool, mode: ServeMode, dir: &Path, calls: &Arc<AtomicUsiz
     .await
 }
 
-async fn post(t: &TestServer, path: &str, body: &Value) -> (u16, String) {
+pub(super) async fn post(t: &TestServer, path: &str, body: &Value) -> (u16, String) {
     let r = t.send(t.page(Request::new("POST", path).json(body))).await;
     (r.status, r.code())
 }
 
-const REFUSED: [(&str, &str); 7] = [
+const REFUSED: [(&str, &str); 9] = [
     ("/api/accounts/sync", r#"{"dryRun":false}"#),
     ("/api/accounts/review/apply", r#"{"decisions":{}}"#),
     ("/api/accounts/sync/undo", "{}"),
     ("/api/accounts/switch", r#"{"to":"a"}"#),
     ("/api/accounts/switch/anyway", "{}"),
+    ("/api/accounts/switch/skip-step", r#"{"stage":"countdown"}"#),
+    (
+        "/api/accounts/switch/skip-thread",
+        r#"{"board":"rotp","thread":"lead"}"#,
+    ),
     ("/api/accounts/login/save", "{}"),
     ("/api/accounts/settings", r#"{"pollMinutes":9}"#),
 ];
