@@ -5,13 +5,18 @@ use std::path::Path;
 use std::time::{Duration, SystemTime};
 
 use argus_accounts::{Account, find_app_data};
+use argus_core::Coll;
+use argus_core::clock::now_ms;
 use argus_notify::{By, Level, PingRequest};
-use serde_json::json;
+use serde_json::{Value, json};
 
 use super::AccountsService;
-use super::accounts_switch::cached_version;
+use super::accounts_switch::{cached_version, shown_switch};
 use super::accounts_switch_log::{Line, LineState, Stage, sidebar_check_line};
 use crate::Services;
+
+/// The doc of the `AccountsState` collection that holds the check while it runs.
+const PENDING: &str = "sidebar-check";
 
 /// How often the Local Storage is looked at while it settles, at most.
 const SETTLE_POLL: Duration = Duration::from_secs(1);
@@ -134,6 +139,12 @@ pub(crate) fn check_sidebars(
     ends: &(Account, Account),
     id: &str,
 ) {
+    save_pending(accounts, ends, id);
+    run_check(svc, accounts, ends, id);
+    clear_pending(accounts);
+}
+
+fn run_check(svc: &Services, accounts: &AccountsService, ends: &(Account, Account), id: &str) {
     let (from, to) = ends;
     wait_for_quiet(accounts);
     let checked = check_and_repair(
@@ -172,6 +183,64 @@ pub(crate) fn check_sidebars(
     }
 }
 
+/// Keeps the check in the store from its start, so a restart of Argus can take it up again.
+fn save_pending(accounts: &AccountsService, (from, to): &(Account, Account), id: &str) {
+    let doc = json!({ "id": id, "from": from.key, "to": to.key, "startedAt": now_ms() });
+    if let Err(e) = accounts.docs.put(Coll::AccountsState, PENDING, doc) {
+        accounts
+            .log
+            .warn("accounts sidebar check not saved", json!({ "error": e }));
+    }
+}
+
+fn clear_pending(accounts: &AccountsService) {
+    if let Err(e) = accounts.docs.delete(Coll::AccountsState, PENDING) {
+        accounts
+            .log
+            .warn("accounts sidebar check not cleared", json!({ "error": e }));
+    }
+}
+
+/// The switch id and the two account keys a saved check names.
+fn pending_of(doc: &Value) -> Option<(&str, &str, &str)> {
+    let text = |key: &str| doc[key].as_str().filter(|s| !s.is_empty());
+    Some((text("id")?, text("from")?, text("to")?))
+}
+
+/// Whether the stored `switch` doc is still the verifying switch `id`.
+fn still_verifying(stored: Option<&Value>, id: &str) -> bool {
+    stored.is_some_and(|d| d["id"] == id && d["desktopPhase"] == "verifying")
+}
+
+/// At start-up: takes up a sidebar check that a restart of Argus cut short, when its switch is
+/// still verifying and both accounts are known; otherwise drops the saved check. Blocking.
+pub(crate) fn resume_check(svc: &Services, accounts: &AccountsService) {
+    if svc.shadow {
+        return;
+    }
+    let Some(saved) = accounts.docs.get(Coll::AccountsState, PENDING) else {
+        return;
+    };
+    let stored = shown_switch(svc);
+    let config = accounts.config();
+    let find = |key: &str| config.accounts.iter().find(|a| a.key == key).cloned();
+    let ends = pending_of(&saved).and_then(|(id, from, to)| {
+        let ends = (find(from)?, find(to)?);
+        still_verifying(stored.as_ref(), id).then(|| (id.to_owned(), ends))
+    });
+    let (Some((id, ends)), Some(stored)) = (ends, stored) else {
+        clear_pending(accounts);
+        return;
+    };
+    let text = "Argus restarted during the sidebar check; the check started again.";
+    let line = Line::new(Stage::Verify, LineState::Done, text);
+    if let Err(e) = accounts.resume_switch(&stored, &[line]) {
+        svc.log
+            .error("accounts switch doc not written", json!({ "error": e }));
+    }
+    check_sidebars(svc, accounts, &ends, &id);
+}
+
 /// A switch whose account and sidebars checked out: the installed Claude version is now the
 /// verified one.
 fn verify_version(svc: &Services, accounts: &AccountsService) {
@@ -196,7 +265,9 @@ mod tests {
     use std::cell::Cell;
     use std::time::Duration;
 
-    use super::{QUIET_POLLS, check_and_repair, repair_line, settle};
+    use serde_json::json;
+
+    use super::{QUIET_POLLS, check_and_repair, pending_of, repair_line, settle, still_verifying};
     use crate::services::accounts_switch_log::LineState;
 
     #[test]
@@ -253,6 +324,23 @@ mod tests {
         let checked = check_and_repair(|| Err("locked".to_owned()), || Ok(()));
         assert_eq!(checked.left, Err("locked".to_owned()));
         assert_eq!(checked.repair, None);
+    }
+
+    #[test]
+    fn a_saved_check_names_the_switch_and_both_accounts() {
+        let saved = json!({ "id": "SW-4", "from": "a", "to": "b", "startedAt": 1 });
+        assert_eq!(pending_of(&saved), Some(("SW-4", "a", "b")));
+        assert_eq!(pending_of(&json!({ "id": "SW-4", "from": "a" })), None);
+    }
+
+    #[test]
+    fn only_the_verifying_switch_of_the_same_id_is_taken_up() {
+        let doc = json!({ "id": "SW-4", "desktopPhase": "verifying" });
+        assert!(still_verifying(Some(&doc), "SW-4"));
+        assert!(!still_verifying(Some(&doc), "SW-5"));
+        let done = json!({ "id": "SW-4", "desktopPhase": "done" });
+        assert!(!still_verifying(Some(&done), "SW-4"));
+        assert!(!still_verifying(None, "SW-4"));
     }
 
     #[test]
