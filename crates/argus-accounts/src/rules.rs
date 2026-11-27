@@ -318,15 +318,14 @@ fn for_active(facts: &Facts<'_>) -> Vec<Decision> {
     if !me.rules.auto_switch || held(facts, &me.key) {
         return Vec::new();
     }
-    let target = next::target(facts.accounts, &me.key, facts.plan);
-    let ready = facts.cycle == CycleView::Ready;
-    if me.over() || ready {
-        return at_point(facts, me, target, ready);
-    }
-    if target.is_none() {
+    // The owner's rule: nothing at all happens before the switch point. No estimate is asked,
+    // no handover is asked and no countdown starts until the use reaches it.
+    if !me.over() {
         return Vec::new();
     }
-    before_point(facts, me)
+    let target = next::target(facts.accounts, &me.key, facts.plan);
+    let ready = facts.cycle == CycleView::Ready;
+    at_point(facts, me, target, ready)
 }
 
 fn at_point(facts: &Facts<'_>, me: &View, target: Option<&View>, ready: bool) -> Vec<Decision> {
@@ -373,75 +372,6 @@ fn no_target(facts: &Facts<'_>, me: &View) -> Vec<Decision> {
     }
 }
 
-fn before_point(facts: &Facts<'_>, me: &View) -> Vec<Decision> {
-    let Some(percent) = me.percent else {
-        return Vec::new();
-    };
-    match me.rules.handover {
-        HandoverMode::Off => Vec::new(),
-        HandoverMode::At(at) => fixed(facts, percent, at),
-        HandoverMode::Auto => auto(facts, percent),
-    }
-}
-
-fn new_leads(facts: &Facts<'_>) -> Vec<Decision> {
-    facts
-        .estimates
-        .filter(|e| !e.new_leads.is_empty())
-        .map(|e| Decision::AddLeads(e.new_leads.clone()))
-        .into_iter()
-        .collect()
-}
-
-fn fixed(facts: &Facts<'_>, percent: f64, at: f64) -> Vec<Decision> {
-    if percent < at {
-        return Vec::new();
-    }
-    match facts.cycle {
-        CycleView::None => vec![
-            Decision::StartCycle {
-                mode: CycleMode::Fixed,
-                ask_at: Some(at),
-            },
-            Decision::AskAll,
-        ],
-        CycleView::Estimating => vec![Decision::AskAll],
-        CycleView::Asked => new_leads(facts),
-        CycleView::Foreign | CycleView::Ready => Vec::new(),
-    }
-}
-
-fn auto(facts: &Facts<'_>, percent: f64) -> Vec<Decision> {
-    let Some(estimates) = facts.estimates else {
-        return Vec::new();
-    };
-    let at_ask = percent >= estimates.ask_at;
-    match facts.cycle {
-        CycleView::None if at_ask && estimates.has_leads => vec![
-            Decision::StartCycle {
-                mode: CycleMode::Auto,
-                ask_at: None,
-            },
-            Decision::AskAll,
-        ],
-        CycleView::None if !estimates.ask_estimates.is_empty() => vec![Decision::StartCycle {
-            mode: CycleMode::Auto,
-            ask_at: None,
-        }],
-        CycleView::Estimating if at_ask => vec![Decision::AskAll],
-        CycleView::Estimating => {
-            let mut out = Vec::new();
-            if !estimates.ask_estimates.is_empty() {
-                out.push(Decision::StartEstimates(estimates.ask_estimates.clone()));
-            }
-            out.extend(new_leads(facts));
-            out
-        }
-        CycleView::Asked => new_leads(facts),
-        CycleView::None | CycleView::Foreign | CycleView::Ready => Vec::new(),
-    }
-}
-
 /// The grace ended: switch when the checks hold, else stand down.
 fn on_countdown(facts: &Facts<'_>, countdown: &Countdown) -> Vec<Decision> {
     if facts.now_ms < countdown.ends_at_ms {
@@ -457,7 +387,7 @@ fn on_countdown(facts: &Facts<'_>, countdown: &Countdown) -> Vec<Decision> {
     if !from.rules.auto_switch {
         return stand_down(StandDownReason::RuleOff);
     }
-    if !(from.over() || facts.cycle == CycleView::Ready) {
+    if !from.over() {
         return stand_down(StandDownReason::BelowPoint);
     }
     if !view_of(facts, &countdown.to).is_some_and(View::has_room) {
@@ -680,38 +610,6 @@ mod tests {
     }
 
     #[test]
-    fn fixed_handover_starts_a_cycle_at_its_percent_and_asks_everyone() {
-        let mut me = view("a", 90.0, 10);
-        me.rules.handover = HandoverMode::At(90.0);
-        let mut s = setup(me, view("b", 10.0, 20));
-        assert_eq!(
-            run(&s),
-            vec![
-                Decision::StartCycle {
-                    mode: CycleMode::Fixed,
-                    ask_at: Some(90.0)
-                },
-                Decision::AskAll
-            ]
-        );
-        s.accounts[0].percent = Some(89.9);
-        assert!(run(&s).is_empty());
-    }
-
-    #[test]
-    fn fixed_handover_with_an_asked_cycle_only_adds_new_leads() {
-        let mut me = view("a", 91.0, 10);
-        me.rules.handover = HandoverMode::At(90.0);
-        let mut s = setup(me, view("b", 10.0, 20));
-        s.cycle = CycleView::Asked;
-        assert!(run(&s).is_empty());
-        let mut e = estimates(90.0);
-        e.new_leads = vec![lead("lead")];
-        s.estimates = Some(e);
-        assert_eq!(run(&s), vec![Decision::AddLeads(vec![lead("lead")])]);
-    }
-
-    #[test]
     fn handover_without_a_target_starts_nothing() {
         let mut me = view("a", 91.0, 10);
         me.rules.handover = HandoverMode::At(90.0);
@@ -719,85 +617,44 @@ mod tests {
         assert!(run(&s).is_empty());
     }
 
-    fn auto_setup(percent: f64) -> Setup {
-        let mut me = view("a", percent, 10);
-        me.rules.handover = HandoverMode::Auto;
-        setup(me, view("b", 10.0, 20))
+    #[test]
+    fn nothing_at_all_happens_before_the_switch_point_in_any_handover_mode() {
+        for handover in [HandoverMode::Auto, HandoverMode::At(90.0), HandoverMode::Off] {
+            for cycle in [CycleView::None, CycleView::Estimating, CycleView::Asked, CycleView::Ready] {
+                for percent in [90.0, 96.0, 97.9] {
+                    let mut s = auto_setup(percent);
+                    s.accounts[0].rules.handover = handover;
+                    s.cycle = cycle;
+                    let mut e = estimates(91.0);
+                    e.ask_estimates = vec![lead("lead")];
+                    e.new_leads = vec![lead("late")];
+                    s.estimates = Some(e);
+                    assert_eq!(run(&s).len(), 0, "{percent}% under a 98% switch point");
+                }
+            }
+        }
     }
 
     #[test]
-    fn auto_handover_asks_for_estimates_when_the_estimator_says_near() {
-        let mut s = auto_setup(90.0);
-        let mut e = estimates(95.7);
-        e.ask_estimates = vec![lead("lead")];
-        s.estimates = Some(e);
-        assert_eq!(
-            run(&s),
-            vec![Decision::StartCycle {
-                mode: CycleMode::Auto,
-                ask_at: None
-            }]
-        );
-        s.estimates = Some(estimates(95.7));
-        assert!(run(&s).is_empty());
-    }
-
-    #[test]
-    fn auto_handover_re_asks_stale_leads_while_estimating() {
-        let mut s = auto_setup(92.0);
-        s.cycle = CycleView::Estimating;
-        let mut e = estimates(95.7);
-        e.ask_estimates = vec![lead("lead")];
-        e.new_leads = vec![lead("late")];
-        s.estimates = Some(e);
-        assert_eq!(
-            run(&s),
-            vec![
-                Decision::StartEstimates(vec![lead("lead")]),
-                Decision::AddLeads(vec![lead("late")])
-            ]
-        );
-    }
-
-    #[test]
-    fn auto_handover_asks_everyone_at_the_ask_point() {
-        let mut s = auto_setup(95.7);
-        s.cycle = CycleView::Estimating;
-        s.estimates = Some(estimates(95.7));
-        assert_eq!(run(&s), vec![Decision::AskAll]);
-        s.cycle = CycleView::None;
+    fn the_switch_point_asks_every_handover_then_counts_down() {
+        let mut s = auto_setup(98.0);
+        s.estimates = Some(estimates(91.0));
         assert_eq!(
             run(&s),
             vec![
                 Decision::StartCycle {
-                    mode: CycleMode::Auto,
+                    mode: CycleMode::Now,
                     ask_at: None
                 },
-                Decision::AskAll
+                countdown_to("b")
             ]
         );
     }
 
-    #[test]
-    fn auto_handover_with_no_working_lead_starts_no_cycle() {
-        let mut s = auto_setup(96.0);
-        let mut e = estimates(95.7);
-        e.has_leads = false;
-        s.estimates = Some(e);
-        assert!(run(&s).is_empty());
-    }
-
-    #[test]
-    fn a_ready_cycle_starts_the_countdown_below_the_switch_point() {
-        let mut s = auto_setup(96.0);
-        s.cycle = CycleView::Ready;
-        assert_eq!(
-            run(&s),
-            vec![Decision::StartCountdown {
-                to: "b".to_owned(),
-                reason: CountdownReason::HandoversReady
-            }]
-        );
+    fn auto_setup(percent: f64) -> Setup {
+        let mut me = view("a", percent, 10);
+        me.rules.handover = HandoverMode::Auto;
+        setup(me, view("b", 10.0, 20))
     }
 
     #[test]
@@ -839,11 +696,11 @@ mod tests {
     }
 
     #[test]
-    fn the_countdown_end_switches_on_a_ready_cycle_below_the_point() {
+    fn the_countdown_end_never_switches_on_a_ready_cycle_below_the_point() {
         let mut s = setup(view("a", 90.0, 10), view("b", 10.0, 20));
         s.cycle = CycleView::Ready;
         running(&mut s, 1_000);
-        assert_eq!(run(&s), vec![Decision::Switch { to: "b".to_owned() }]);
+        assert_eq!(run(&s), stood_down(StandDownReason::BelowPoint));
     }
 
     fn stood_down(reason: StandDownReason) -> Vec<Decision> {

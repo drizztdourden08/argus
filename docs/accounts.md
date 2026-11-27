@@ -210,51 +210,24 @@ Every account has two rules of its own. They apply while Desktop is on that acco
 
 The grace. A banner in every tab counts down, the tray gains "Cancel switch" while the `switch`
 doc phase is `countdown`, and the toast opens the tab. At the end Argus checks again: Desktop is
-still on the same account, auto-switch is still on, the use is still at the switch point (or the
-handovers are all in), and the target still has room. If any check fails it stands down and says
-why. Cancel holds the rule off for that account until the use is 5 points under the switch point,
-the limit resets, or the rule is turned off and on again. "Switch now" has no countdown.
+still on the same account, auto-switch is still on, the use is still at the switch point, and
+the target still has room. If any check fails it stands down and says why. Cancel holds the rule
+off for that account until the use is 5 points under the switch point, the limit resets, or the
+rule is turned off and on again. "Switch now" has no countdown.
 
-The handover cycle, per account:
+The handover cycle, per account (the owner's rule, 2026-11-26): nothing happens before the switch
+point. No estimate is asked, no handover is asked and no countdown starts below it, whatever the
+handover setting.
 
 - `off`: the countdown starts at the switch point, with no handover.
-- A percent: at that percent every working lead is asked for its handover at once.
-- `auto`: once the use is within 10 points of the switch point, or the burn reaches it within 45
-  minutes, each working lead gets a `handover-estimate` wake. At the ask point each gets a
-  `handover-request` wake.
-- When every asked lead is ready, the countdown starts at once, even below the switch point. If
-  the switch point comes first, the leads that are not ready are cut off and the countdown
-  starts.
+- Any other setting (`auto` or a percent): at the switch point every working lead is asked for its
+  handover at once and the countdown starts. The switch then waits for every handover (or the
+  owner skips the wait) before Claude is closed.
 
 A lead is working when its thread is inside a turn or it has a live agent record. An idle lead is
 not asked and costs nothing. The lead is told what to do by `coord handover estimate`, `write` and
 `status` (the verbs are in `crates/argus-coord/src/verbs/remote/handover.rs`, and only a board's
 lead may call them).
-
-### The ask point
-
-```text
-need   = k x (sum of the leads' estimates)   points the handovers will use
-       + burn x T                            what normal work burns meanwhile
-       + safety                              0.5 points
-ask at = switch point - need                 kept within 30 points below the switch point
-burn   = points a minute over the last 20 minutes
-T      = longest estimate in minutes + 2 minutes to write the files
-k      = calibration, starts at 1.0
-```
-
-Worked example. The switch point is 98. Three working leads estimate 0.6, 0.4 and 0.3 points, the
-longest takes 8 minutes, the burn is 0.05 points a minute and k is 1.0. The sum is 1.3. T is
-8 + 2 = 10 minutes, so the burn adds 0.5. The safety margin adds 0.5. So need is 1.3 + 0.5 + 0.5 =
-2.3, and Argus asks at 98 - 2.3 = 95.7 percent.
-
-A lead's own estimate counts while it is under 20 minutes old. Otherwise Argus uses its own
-default: the lead's handover `lead` (0.4) plus each live agent by model (`opus` 0.3, `sonnet` 0.1,
-`haiku` 0.03, times `longContextFactor` 1.5 over 100k tokens of context). A lead is asked again
-only when its agent count changes or its estimate is old, and never more often than every 20
-minutes. After each cycle that ended with every lead ready, k moves a quarter of the way toward
-actual points used divided by estimated, within 0.5 to 3. The tab shows what the last cycle used.
-On a weekly limit one point is a lot of work, so "close to 100" means within about a point.
 
 ## The resume task
 
