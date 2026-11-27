@@ -693,7 +693,7 @@ mod tests {
         let mut archived = record(1, 10);
         archived["isArchived"] = json!(true);
         archived["lastFocusedAt"] = json!(5);
-        let mut live = record(1, 10);
+        let mut live = record(1, 11);
         live["lastFocusedAt"] = json!(9);
         fx.put(&a, 1, &archived);
         fx.put(&b, 1, &live);
