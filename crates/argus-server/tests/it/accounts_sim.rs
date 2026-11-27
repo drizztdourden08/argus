@@ -143,12 +143,16 @@ fn tweak(app: &Arc<ProcessApp>, user_home: PathBuf) -> Tweak {
     })
 }
 
+/// The switch slot is one per process, so the simulated switches take turns.
+static ONE_AT_A_TIME: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
 /// A server over a made-up home, with the fake Claude running as the first account.
 struct Rig {
     t: TestServer,
     app: Arc<ProcessApp>,
     home: SimHome,
     _dir: tempfile::TempDir,
+    _turn: tokio::sync::MutexGuard<'static, ()>,
 }
 
 impl Drop for Rig {
@@ -158,6 +162,7 @@ impl Drop for Rig {
 }
 
 async fn rig(tray: bool, force_quit: bool) -> Rig {
+    let turn = ONE_AT_A_TIME.lock().await;
     let dir = tempfile::tempdir().expect("dir");
     let user_home = dir.path().join("user");
     let dashboard = dir.path().join("dashboard");
@@ -181,6 +186,7 @@ async fn rig(tray: bool, force_quit: bool) -> Rig {
         app,
         home,
         _dir: dir,
+        _turn: turn,
     }
 }
 

@@ -240,6 +240,7 @@ async fn a_completed_cycle_means_the_switch_skips_the_handover() {
         "switch b false",
         "closed before the switch"
     );
+    world.change(|s| s.active = Some("b".to_owned()));
     desk.evaluate().await;
     assert_eq!(
         world.toasts().len(),
