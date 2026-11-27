@@ -110,7 +110,7 @@ const stubPosts = (reply?: Reply): Posted[] => {
   const posted: Posted[] = [];
   vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
     const body = JSON.parse(String(init?.body ?? '{}')) as Doc;
-    posted.push({ url, body });
+    if (init?.method === 'POST') posted.push({ url, body });
     return Promise.resolve(new Response(JSON.stringify(reply?.(body, url) ?? applied), { status: 200 }));
   }));
   return posted;
