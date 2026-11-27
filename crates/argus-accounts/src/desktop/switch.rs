@@ -96,6 +96,9 @@ pub trait Stages: Send + Sync {
     fn active_account(&self) -> Option<String>;
     /// Called right after Claude is confirmed closed, before anything else touches its data.
     fn closed(&self) {}
+    /// Called by a rollback before Claude starts again, to undo what the switch wrote outside the
+    /// login, such as the sidebar.
+    fn undo(&self) {}
     /// Whether the owner asked to stop waiting for the account check or the sign-in.
     fn skip_wait(&self) -> bool {
         false
@@ -309,7 +312,11 @@ fn drive(
     match result {
         Ok(note) => finished(plan, note),
         Err(why) => {
-            let rollback = roll_back(plan.from, app, vault, (flow.restore, plan.force_quit));
+            let rollback = roll_back(
+                plan.from,
+                (app, vault, stages),
+                (flow.restore, plan.force_quit),
+            );
             if rollback.is_ok() {
                 let _ = plan.journal.clear();
             }
@@ -580,8 +587,7 @@ fn unsigned_note(app: &dyn DesktopApp, label: &str) -> String {
 /// back when `restore` says the login may have changed, and starts.
 fn roll_back(
     from: &Account,
-    app: &dyn DesktopApp,
-    vault: &dyn LoginVault,
+    (app, vault, stages): (&dyn DesktopApp, &dyn LoginVault, &dyn Stages),
     (restore, force): (bool, bool),
 ) -> Result<(), String> {
     if app.is_running() {
@@ -595,6 +601,7 @@ fn roll_back(
     if restore {
         vault.restore(from)?;
     }
+    stages.undo();
     app.start()
 }
 
@@ -623,6 +630,8 @@ mod tests {
         touched: bool,
         skip: bool,
         closed_calls: Mutex<u32>,
+        /// How many calls were logged when each undo ran.
+        undo_at: Mutex<Vec<usize>>,
         /// Whether the journal existed at each restore.
         journal_at_restore: Mutex<Vec<bool>>,
         watch: Option<Journal>,
@@ -639,6 +648,7 @@ mod tests {
                 touched: true,
                 skip: false,
                 closed_calls: Mutex::new(0),
+                undo_at: Mutex::default(),
                 journal_at_restore: Mutex::default(),
                 watch: None,
             }
@@ -716,6 +726,10 @@ mod tests {
         }
         fn skip_wait(&self) -> bool {
             self.skip
+        }
+        fn undo(&self) {
+            let seen = self.log.lock().unwrap().len();
+            self.undo_at.lock().unwrap().push(seen);
         }
     }
 
@@ -831,6 +845,14 @@ mod tests {
         assert!(rollback.is_ok());
         assert_eq!(fake.calls(), ["close", "save a", "sync", "start"]);
         assert_eq!(status(&steps, "restore_login"), StepStatus::Skipped);
+    }
+
+    #[test]
+    fn a_rollback_undoes_the_sidebar_once_before_the_start() {
+        let fake = Fake::new("sync", None);
+        let _ = go(&fake, false, false);
+        assert_eq!(*fake.undo_at.lock().unwrap(), [3]);
+        assert_eq!(fake.calls().len(), 4);
     }
 
     #[test]

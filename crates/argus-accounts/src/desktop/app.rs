@@ -257,6 +257,12 @@ impl ClaudeDesktop {
     }
 }
 
+/// Whether any process image is left inside the install folder. A Claude helper can outlive the
+/// lock file, so the lock alone is not enough to say the app is closed.
+fn helpers_left(install: &str) -> bool {
+    powershell(&pids_script(install)).is_ok_and(|out| !parse_pids(&out).is_empty())
+}
+
 /// Ends the processes of the install folder by PID: `taskkill /T` first, `/T /F` on what is
 /// left after [`KILL_GRACE`]. Failures are ignored; the wait for the lock says what happened.
 fn kill_claude(install: &str) {
@@ -291,6 +297,9 @@ fn is_chat_record(path: &Path) -> bool {
 impl DesktopApp for ClaudeDesktop {
     fn is_running(&self) -> bool {
         lock_running(&self.app)
+            || self
+                .install_folder()
+                .is_ok_and(|install| helpers_left(&install))
     }
 
     fn turn_in_progress(&self) -> bool {
