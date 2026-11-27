@@ -55,7 +55,7 @@ fn done_long_ago(doc: &Value, at: Option<i64>, now: i64) -> bool {
     doc["phase"].as_str() == Some("done") && at.is_none_or(|t| now - t > DONE_SHOWN_MS)
 }
 
-/// `{ "phase": ..., "atMs": number | null }` for the `switch` doc shown at `now` (epoch
+/// `{ "phase": ..., "atMs": number | null, "from": key | null, "to": key | null }` for the `switch` doc shown at `now` (epoch
 /// milliseconds), and whether the account being left has a confirmed limit.
 pub(crate) fn run_shown(doc: Option<&Value>, limit_confirmed: bool, now: i64) -> Value {
     let idle = json!({ "phase": "idle", "atMs": null });
@@ -70,7 +70,7 @@ pub(crate) fn run_shown(doc: Option<&Value>, limit_confirmed: bool, now: i64) ->
     if done_long_ago(doc, at, now) {
         return idle;
     }
-    json!({ "phase": phase, "atMs": at })
+    json!({ "phase": phase, "atMs": at, "from": doc["from"], "to": doc["to"] })
 }
 
 // test-tag: critical
@@ -133,6 +133,16 @@ mod tests {
         assert_eq!(phase(&doc("verifying", &[]), false), "switched");
         assert_eq!(phase(&doc("done", &[]), false), "switched");
         assert_eq!(phase(&doc("failed", &[]), false), "failed");
+    }
+
+    #[test]
+    fn the_run_names_its_pair() {
+        let mut d = doc("done", &[]);
+        d["from"] = json!("a");
+        d["to"] = json!("b");
+        let run = run_shown(Some(&d), false, SOON);
+        assert_eq!(run["from"], "a");
+        assert_eq!(run["to"], "b");
     }
 
     #[test]
