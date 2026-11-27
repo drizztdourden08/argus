@@ -65,12 +65,12 @@ pub struct View {
 }
 
 impl View {
-    /// Whether the use reached the switch point: its percent, a critical flag or 100.
+    /// Whether the use reached the switch point: its percent or 100. The endpoint's critical
+    /// flag counts only when no percent is known, since it is raised well below the limit.
     #[must_use]
     pub fn over(&self) -> bool {
         self.percent
-            .is_some_and(|p| p >= self.rules.switch_at || p >= 100.0)
-            || self.critical
+            .map_or(self.critical, |p| p >= self.rules.switch_at || p >= 100.0)
     }
 
     /// Whether a switch may land here: it can receive and is under its own switch point.
@@ -564,8 +564,17 @@ mod tests {
     }
 
     #[test]
-    fn a_critical_severity_or_a_full_limit_counts_as_the_point() {
+    fn a_critical_severity_below_the_switch_point_never_switches() {
+        let mut critical = view("a", 90.0, 10);
+        critical.critical = true;
+        critical.rules.switch_at = 100.0;
+        assert!(!run(&setup(critical, view("b", 10.0, 20))).contains(&countdown_to("b")));
+    }
+
+    #[test]
+    fn a_critical_severity_with_no_percent_or_a_full_limit_counts_as_the_point() {
         let mut critical = view("a", 50.0, 10);
+        critical.percent = None;
         critical.critical = true;
         assert_eq!(
             run(&setup(critical, view("b", 10.0, 20))),

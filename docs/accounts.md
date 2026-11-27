@@ -177,7 +177,7 @@ Every account has two rules of its own. They apply while Desktop is on that acco
 
 | Rule | Setting | What it does |
 |---|---|---|
-| Auto-switch | on or off, and `switchAt` (default 98) | When the binding limit reaches `switchAt` (or is critical, or is 100), a 60 second countdown starts, then the switch runs. The target is the account with the most room: able to receive, under its own `switchAt`, lowest use, then soonest reset. With no such account Argus only tells the owner, once per limit window. |
+| Auto-switch | on or off, and `switchAt` (default 98) | When the binding limit reaches `switchAt` or 100 (the endpoint's critical flag counts only when no percent is known), a 60 second countdown starts, then the switch runs. The target is the account with the most room: able to receive, under its own `switchAt`, lowest use, then soonest reset. With no such account Argus only tells the owner, once per limit window. |
 | Handover | `off`, a percent, or `auto` | Asks every working lead for a handover before the switch. It only runs while auto-switch is on. |
 
 The grace. A banner in every tab counts down, the tray gains "Cancel switch" while the `switch`
