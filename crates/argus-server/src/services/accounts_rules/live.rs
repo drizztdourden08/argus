@@ -148,6 +148,16 @@ impl World for Live {
         .await
     }
 
+    async fn sweep_idle(&self) {
+        let _ = self
+            .blocking(|me| {
+                if let Some(desk) = me.accounts.handovers() {
+                    desk.confirm_idle_sweep(&me.accounts);
+                }
+            })
+            .await;
+    }
+
     async fn ask_all(&self, use_now: Option<f64>) -> Result<(), String> {
         self.desk_call(move |me| me.desk_of()?.ask_all(use_now, &me.accounts))
             .await

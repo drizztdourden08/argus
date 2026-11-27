@@ -165,6 +165,13 @@ impl AccountsService {
         self.docs.put(Coll::AccountsState, SWITCH_DOC, doc)
     }
 
+    /// The phase of the `switch` doc as the web reads it (`idle` before any process).
+    pub(crate) fn switch_phase(&self) -> String {
+        let doc = self.switch_log.held().again(true, now_ms());
+        doc.and_then(|d| d["phase"].as_str().map(str::to_owned))
+            .unwrap_or_else(|| "idle".to_owned())
+    }
+
     /// Notes steps of the process; the doc is written again when a switch is under way. Blocking.
     pub(crate) fn note_switch(&self, lines: &[Line]) {
         let now = now_ms();

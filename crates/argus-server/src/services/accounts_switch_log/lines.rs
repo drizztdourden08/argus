@@ -2,7 +2,7 @@
 //! what changed in the handover cycle, and the leads the cycle found.
 
 use argus_accounts::desktop::{Step, StepStatus};
-use argus_accounts::handover::{Cycle, CycleMode, CyclePhase, Handover, HandoverState};
+use argus_accounts::handover::{Cycle, CycleMode, CyclePhase, Handover, HandoverState, Via};
 use argus_accounts::sync::Summary;
 use serde_json::{Value, json};
 
@@ -69,7 +69,13 @@ fn lead_text(h: &Handover) -> String {
         HandoverState::Estimated => format!("{name} sent its estimate."),
         HandoverState::Asked => format!("{name} was asked for its handover."),
         HandoverState::Writing => format!("{name} is writing its handover."),
+        HandoverState::Ready if h.via == Some(Via::Idle) => {
+            format!("{name} is idle with a current handover: counted as ready.")
+        }
         HandoverState::Ready => format!("Handover received from {name}."),
+        HandoverState::CutOff if h.via == Some(Via::Owner) => {
+            format!("{name} was skipped by the owner.")
+        }
         HandoverState::CutOff => format!("{name} was cut off before its handover."),
         HandoverState::Resumed => format!("{name} resumed on the new account."),
         HandoverState::NotResumed => format!("{name} did not resume."),
@@ -147,8 +153,18 @@ pub(crate) fn cycle_lines(before: Option<&Cycle>, after: Option<&Cycle>) -> Cycl
     out
 }
 
-/// How a lead of the cycle stands, in the words of the doc, with a note when it did not go well.
-fn thread_state(state: HandoverState) -> (&'static str, Option<&'static str>) {
+/// How a lead of the cycle stands, in the words of the doc, with a note when it did not go well
+/// or was not asked for its handover in full (`via`).
+fn thread_state(state: HandoverState, via: Option<Via>) -> (&'static str, Option<&'static str>) {
+    match (state, via) {
+        (HandoverState::Ready, Some(Via::Idle)) => {
+            return ("ready", Some("idle, handover current: counted as ready"));
+        }
+        (HandoverState::CutOff, Some(Via::Owner)) => {
+            return ("skipped", Some("skipped by the owner"));
+        }
+        _ => {}
+    }
     match state {
         HandoverState::EstimateAsked | HandoverState::Estimated => ("found", None),
         HandoverState::Asked | HandoverState::Writing => ("asked", None),
@@ -174,7 +190,7 @@ pub(crate) fn threads_of(cycle: &Cycle, name_of: &dyn Fn(&str) -> Option<String>
         .leads
         .iter()
         .map(|h| {
-            let (state, note) = thread_state(h.state);
+            let (state, note) = thread_state(h.state, h.via);
             let mut out = json!({
                 "board": h.board,
                 "thread": h.thread,
@@ -184,6 +200,9 @@ pub(crate) fn threads_of(cycle: &Cycle, name_of: &dyn Fn(&str) -> Option<String>
             });
             if let Some(note) = note {
                 out["note"] = json!(note);
+            }
+            if let Some(via) = h.via {
+                out["via"] = json!(via);
             }
             out
         })

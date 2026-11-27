@@ -3,7 +3,7 @@
 //! the doc in the shape the web reads.
 
 use argus_accounts::desktop::{Step, StepStatus};
-use argus_accounts::handover::{Cycle, CycleMode, CyclePhase, Handover, HandoverState};
+use argus_accounts::handover::{Cycle, CycleMode, CyclePhase, Handover, HandoverState, Via};
 use argus_core::clock::iso_from_ms;
 use serde_json::{Value, json};
 
@@ -224,6 +224,7 @@ fn handover(thread: &str, state: HandoverState) -> Handover {
         estimate_asked_at: None,
         asked_at: None,
         ready_at: None,
+        via: None,
     }
 }
 
@@ -307,4 +308,27 @@ fn a_lead_row_is_titled_with_its_project_name_or_the_thread() {
     assert_eq!(named[0]["title"], "Argus lead");
     let unnamed = threads_of(&found, &|_| None);
     assert_eq!(unnamed[0]["title"], "lead");
+}
+
+#[test]
+fn a_lead_settled_without_its_own_handover_says_how_in_its_line_and_row() {
+    let mut idle = handover("lead", HandoverState::Ready);
+    idle.via = Some(Via::Idle);
+    let mut skipped = handover("other", HandoverState::CutOff);
+    skipped.via = Some(Via::Owner);
+    let found = cycle(CyclePhase::Asked, vec![idle, skipped]);
+    let out = cycle_lines(None, Some(&found));
+    let texts = line_texts(&out.process);
+    assert!(texts.contains(&"rotp/lead is idle with a current handover: counted as ready."));
+    assert!(texts.contains(&"rotp/other was skipped by the owner."));
+    let rows = threads_of(&found, &|_| None);
+    assert_eq!(rows[0]["via"], "idle");
+    assert_eq!(rows[0]["note"], "idle, handover current: counted as ready");
+    assert_eq!(rows[1]["via"], "owner");
+    assert_eq!(rows[1]["note"], "skipped by the owner");
+    let plain = threads_of(
+        &cycle(CyclePhase::Asked, vec![handover("x", HandoverState::Ready)]),
+        &|_| None,
+    );
+    assert_eq!(plain[0].get("via"), None);
 }

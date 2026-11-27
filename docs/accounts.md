@@ -137,7 +137,8 @@ The steps, in order, each shown in the `switch` doc with its phase:
 
 1. `handover`: ask every working lead for a handover and wait for them (only when the switch was
    started with handover). After 10 minutes, or at once on "Switch anyway", the leads that are
-   not ready are cut off.
+   not ready are cut off. About every 5 seconds the wait also looks for an idle lead (see "The idle
+   rule" below), and the owner may skip the wait for the whole step or for one lead.
 2. `close`: close the app politely (the main window of each process in its install folder, up to 20
    seconds). Argus never kills a process by name. A chat that looked mid-turn is noted.
 3. `save_login`: save the login of the account being left.
@@ -152,6 +153,27 @@ The steps, in order, each shown in the `switch` doc with its phase:
 Cancel works until the app is about to close. A failure after the app closed rolls back: a running
 app is closed, the saved login of the old account is put back when the login may have changed
 (from `restore_login` on), and the app is started again. The error says whether going back worked.
+
+### The idle rule and the owner's overrides
+
+A lead that still owes its handover counts as ready, with `via` `idle`, when it is not in a turn
+and nothing shows work after its handover file `~/.coord/<board>/handover.md` was written: its last
+sign of life is at most 3 minutes after the file, and no live agent changed after it. Argus checks
+every pending lead about every 5 seconds while it waits for handovers, and after every poll while a
+cycle is open with no switch running. A lead that is idle with a current file when a cycle opens is
+ready at once, with no wake.
+
+The owner may override from the page only (the coord CLI is refused with 403), never in shadow or a
+preview. Each override is noted in the activity log (kind `accounts-override`) and the step log:
+
+- Skip the grace minute: the countdown ends now; the usual end checks still run.
+- Skip the handover wait: the leads that are not ready are cut off (a switch that runs stops
+  waiting; with none, the cycle is cut off and the countdown starts).
+- Skip the account check or the sign-in wait: the switch ends as done, noted.
+- Skip one lead: ready with its handover file when it is idle with a current one, else cut off.
+
+A handover carries `via`: `owner` (the owner skipped the wait; cut off, or ready with the file) or
+`idle` (the idle rule). A lead row of the `threads` of the `switch` doc carries the same `via`.
 
 ### The switch doc
 
@@ -248,7 +270,7 @@ have their chats and branches, and the owner can send the resume text by hand.
 
 ## Accounts in a preview
 
-The accounts feature is read-only in a preview and in shadow mode. A sync that applies, an undo, a Desktop switch (also "anyway"), saving a login and writing the accounts settings (shadow only; a preview home is a copy, so its settings may change) answer 403 `read_only`. Dry runs, compare, the GET routes, the handover route and a switch cancel stay open. The switching rules start no countdown, handover cycle or switch, nothing is written to the desktop app's scheduled tasks, the start-up repair of a cut-short switch does not run, and a login is never renewed. Usage is read from the Desktop log only. To see live usage in a preview, start it with `ARGUS_PREVIEW_ACCOUNTS_USAGE=1`; it only reads the usage endpoint with the logins as they are, and a shadow run ignores the variable.
+The accounts feature is read-only in a preview and in shadow mode. A sync that applies, an undo, a Desktop switch (also "anyway" and the two skip routes), saving a login and writing the accounts settings (shadow only; a preview home is a copy, so its settings may change) answer 403 `read_only`. Dry runs, compare, the GET routes, the handover route and a switch cancel stay open. The switching rules start no countdown, handover cycle or switch, nothing is written to the desktop app's scheduled tasks, the start-up repair of a cut-short switch does not run, and a login is never renewed. Usage is read from the Desktop log only. To see live usage in a preview, start it with `ARGUS_PREVIEW_ACCOUNTS_USAGE=1`; it only reads the usage endpoint with the logins as they are, and a shadow run ignores the variable.
 
 ## Routes
 
@@ -264,6 +286,8 @@ The accounts feature is read-only in a preview and in shadow mode. A sync that a
 | POST | `/api/accounts/switch` | `{to, handover}`. 202 `{id}`, then follow the `switch` doc. 409 while one runs. |
 | POST | `/api/accounts/switch/anyway` | Stop waiting for the handovers. |
 | POST | `/api/accounts/switch/cancel` | Cancel a countdown or a switch that has not closed the app. |
+| POST | `/api/accounts/switch/skip-step` | `{stage}`: skip the step under way. `countdown` ends the grace minute, `handover` stops waiting for the handovers, `verify` stops waiting for the account check or the sign-in. 409 for `sync` and `switch`, a step not under way, or nothing to skip; 400 for an unknown stage. Page only. |
+| POST | `/api/accounts/switch/skip-thread` | `{board, thread}`: skip one lead's wait (ready with its handover file when idle with a current one, else cut off). 404 for an unknown lead or no cycle, 409 for a closed cycle or a lead that owes nothing. Page only. |
 | GET | `/api/accounts/cycle` | The current or last handover cycle with its handovers. |
 | POST | `/api/accounts/handover` | `{action, board, thread, ...}`: `estimate`, `write`, `status` from `coord handover`; `resumed`, `not_resumed` from the resume task. |
 | GET, POST | `/api/accounts/settings` | The settings; a POST replaces the keys sent. |

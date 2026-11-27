@@ -311,6 +311,27 @@ async fn switch_now_ends_the_countdown_without_a_hold_off() {
 }
 
 #[tokio::test(start_paused = true)]
+async fn skipping_the_grace_reads_the_usage_and_switches_at_once() {
+    let (world, desk) = desk_with(snapshot(98.0, 10.0, HandoverMode::Off));
+    assert!(!desk.skip().await, "no countdown runs yet");
+    desk.evaluate().await;
+    assert!(!world.switched());
+    assert!(desk.skip().await);
+    let calls = world.calls();
+    assert!(calls.contains(&"refresh".to_owned()));
+    assert_eq!(calls.last().unwrap(), "switch b false");
+}
+
+#[tokio::test(start_paused = true)]
+async fn skipping_the_grace_still_stands_down_when_the_use_dropped() {
+    let (world, desk) = desk_with(snapshot(98.0, 10.0, HandoverMode::Off));
+    desk.evaluate().await;
+    world.change(|s| s.accounts[0].percent = Some(80.0));
+    assert!(desk.skip().await);
+    assert!(!world.switched());
+}
+
+#[tokio::test(start_paused = true)]
 async fn a_failed_switch_holds_the_rule_off() {
     let (world, desk) = desk_with(snapshot(98.0, 10.0, HandoverMode::Off));
     *held(&world.switch_fails) = true;

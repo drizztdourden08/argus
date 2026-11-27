@@ -71,6 +71,8 @@ fn journal_of(svc: &Services) -> Journal {
 /// How long the switch waits for the handovers.
 const HANDOVER_WAIT: Duration = Duration::from_secs(600);
 const HANDOVER_POLL: Duration = Duration::from_millis(250);
+/// How many polls of the handover wait pass between looks for leads that went idle (about 5 s).
+const IDLE_SWEEP_POLLS: u32 = 20;
 
 /// Who started the switch.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -98,11 +100,12 @@ struct Gate {
     waiting: bool,
 }
 
-/// The cancel and "anyway" switches of the running switch.
+/// The cancel, "anyway" and "skip the wait" switches of the running switch.
 #[derive(Clone, Default)]
 struct Control {
     gate: Arc<Mutex<Gate>>,
     anyway: Arc<AtomicBool>,
+    skip_wait: Arc<AtomicBool>,
 }
 
 impl Control {
@@ -169,6 +172,15 @@ pub fn request_anyway() -> bool {
     let held = RUNNING.lock().unwrap_or_else(PoisonError::into_inner);
     held.as_ref()
         .map(|control| control.anyway.store(true, Ordering::SeqCst))
+        .is_some()
+}
+
+/// Stops waiting for the account check or the sign-in: the switch ends as noted. False when no
+/// switch runs.
+pub fn request_skip_wait() -> bool {
+    let held = RUNNING.lock().unwrap_or_else(PoisonError::into_inner);
+    held.as_ref()
+        .map(|control| control.skip_wait.store(true, Ordering::SeqCst))
         .is_some()
 }
 
@@ -655,6 +667,7 @@ impl<'a> ServerStages<'a> {
         now_use: Option<f64>,
     ) -> Result<String, Stop> {
         let end = Instant::now() + HANDOVER_WAIT;
+        let mut polls = 0_u32;
         loop {
             if self.run.control.cancelled() {
                 let _ = desk.desk().cancel();
@@ -673,6 +686,10 @@ impl<'a> ServerStages<'a> {
                     .event
                     .as_ref()
                     .map_or_else(|| "cut off the rest".to_owned(), ready_note));
+            }
+            polls += 1;
+            if polls % IDLE_SWEEP_POLLS == 0 {
+                desk.confirm_idle_sweep(&self.run.accounts);
             }
             std::thread::sleep(HANDOVER_POLL);
         }
@@ -763,6 +780,10 @@ impl Stages for ServerStages<'_> {
 
     fn active_account(&self) -> Option<String> {
         last_known_account(&self.run.app)
+    }
+
+    fn skip_wait(&self) -> bool {
+        self.run.control.skip_wait.load(Ordering::SeqCst)
     }
 
     fn closed(&self) {
@@ -928,6 +949,16 @@ mod tests {
         assert!(!control.last_call());
         assert!(!control.cancel());
         assert!(!control.cancelled());
+    }
+
+    #[test]
+    fn a_control_copy_sees_the_skip_wait_request() {
+        use std::sync::atomic::Ordering;
+        let control = Control::default();
+        let copy = control.clone();
+        assert!(!copy.skip_wait.load(Ordering::SeqCst));
+        control.skip_wait.store(true, Ordering::SeqCst);
+        assert!(copy.skip_wait.load(Ordering::SeqCst));
     }
 
     #[test]
