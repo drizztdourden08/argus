@@ -10,7 +10,7 @@ use serde_json::json;
 
 use super::AccountsService;
 use super::accounts_switch::cached_version;
-use super::accounts_switch_log::sidebar_check_line;
+use super::accounts_switch_log::{Line, LineState, Stage, sidebar_check_line};
 use crate::Services;
 
 /// How often the Local Storage is looked at while it settles, at most.
@@ -72,6 +72,58 @@ fn wait_for_quiet(accounts: &AccountsService) {
     }
 }
 
+/// What the check found, and the one repair it made when sidebar changes were missing.
+struct Checked {
+    /// How many changes were missing at the first look.
+    missing: usize,
+    /// The last look: what is still missing.
+    left: Result<usize, String>,
+    /// How the one repair went; `None` when nothing was missing.
+    repair: Option<Result<(), String>>,
+}
+
+/// Looks; when changes are missing, writes the copy once more and looks again.
+fn check_and_repair(
+    mut look: impl FnMut() -> Result<usize, String>,
+    mut write: impl FnMut() -> Result<(), String>,
+) -> Checked {
+    let first = look();
+    let missing = match first {
+        Ok(n) if n > 0 => n,
+        _ => {
+            return Checked {
+                missing: 0,
+                left: first,
+                repair: None,
+            };
+        }
+    };
+    let repair = write();
+    Checked {
+        missing,
+        left: look(),
+        repair: Some(repair),
+    }
+}
+
+/// The step-log line of the one repair.
+fn repair_line(missing: usize, repair: &Result<(), String>) -> Line {
+    match repair {
+        Ok(()) => Line::new(
+            Stage::Verify,
+            LineState::Done,
+            format!(
+                "Sidebar repair: {missing} sidebar changes were missing after Claude started, so the copy was written once more."
+            ),
+        ),
+        Err(why) => Line::new(
+            Stage::Verify,
+            LineState::Failed,
+            format!("Sidebar repair failed: the copy could not be written again ({why})."),
+        ),
+    }
+}
+
 /// After a confirmed switch: checks that the sync held once Claude started again, and ends the
 /// switch `id` (verifying until then) as done or failed. A check that passes confirms the
 /// installed Claude version; one that fails is a failed step, the error of the doc, an urgent
@@ -84,10 +136,18 @@ pub(crate) fn check_sidebars(
 ) {
     let (from, to) = ends;
     wait_for_quiet(accounts);
-    let left = accounts.copy_left(from, to);
+    let checked = check_and_repair(
+        || accounts.copy_left(from, to),
+        || accounts.copy_onto(from, to, false).map(|_| ()),
+    );
+    let left = checked.left;
     let line = sidebar_check_line(&left, &to.label);
+    let mut lines: Vec<Line> = (checked.repair.iter())
+        .map(|r| repair_line(checked.missing, r))
+        .collect();
+    lines.push(line.clone());
     if left == Ok(0) {
-        accounts.finish_switch(id, ("done", None), &[line]);
+        accounts.finish_switch(id, ("done", None), &lines);
         verify_version(svc, accounts);
         return;
     }
@@ -96,11 +156,7 @@ pub(crate) fn check_sidebars(
         Err(why) => why.clone(),
     };
     let error = format!("the switch worked but the sidebar check failed: {detail}");
-    accounts.finish_switch(
-        id,
-        ("failed", Some(error.as_str())),
-        std::slice::from_ref(&line),
-    );
+    accounts.finish_switch(id, ("failed", Some(error.as_str())), &lines);
     svc.log
         .warn("accounts sidebar check failed", json!({ "error": detail }));
     if let Some(notify) = &svc.notify {
@@ -140,7 +196,70 @@ mod tests {
     use std::cell::Cell;
     use std::time::Duration;
 
-    use super::{QUIET_POLLS, settle};
+    use super::{QUIET_POLLS, check_and_repair, repair_line, settle};
+    use crate::services::accounts_switch_log::LineState;
+
+    #[test]
+    fn a_clean_first_look_makes_no_repair() {
+        let written = Cell::new(0_u32);
+        let checked = check_and_repair(
+            || Ok(0),
+            || {
+                written.set(written.get() + 1);
+                Ok(())
+            },
+        );
+        assert_eq!(checked.left, Ok(0));
+        assert_eq!(written.get(), 0);
+        assert_eq!(checked.repair, None);
+    }
+
+    #[test]
+    fn missing_changes_are_written_once_and_looked_at_again() {
+        let looks = Cell::new(0_u32);
+        let written = Cell::new(0_u32);
+        let checked = check_and_repair(
+            || {
+                looks.set(looks.get() + 1);
+                Ok(if looks.get() == 1 { 4 } else { 0 })
+            },
+            || {
+                written.set(written.get() + 1);
+                Ok(())
+            },
+        );
+        assert_eq!(checked.missing, 4);
+        assert_eq!(checked.left, Ok(0));
+        assert_eq!(checked.repair, Some(Ok(())));
+        assert_eq!(written.get(), 1);
+    }
+
+    #[test]
+    fn changes_still_missing_after_the_repair_stay_missing() {
+        let written = Cell::new(0_u32);
+        let checked = check_and_repair(
+            || Ok(2),
+            || {
+                written.set(written.get() + 1);
+                Ok(())
+            },
+        );
+        assert_eq!(checked.left, Ok(2));
+        assert_eq!(written.get(), 1);
+    }
+
+    #[test]
+    fn an_unreadable_sidebar_is_not_repaired() {
+        let checked = check_and_repair(|| Err("locked".to_owned()), || Ok(()));
+        assert_eq!(checked.left, Err("locked".to_owned()));
+        assert_eq!(checked.repair, None);
+    }
+
+    #[test]
+    fn a_failed_repair_is_a_failed_line() {
+        let line = repair_line(3, &Err("busy".to_owned()));
+        assert_eq!(line.state, LineState::Failed);
+    }
 
     #[test]
     fn a_quiet_folder_settles_after_a_few_looks() {
