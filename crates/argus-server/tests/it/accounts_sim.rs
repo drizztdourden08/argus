@@ -6,7 +6,6 @@
 // test-tag: standard
 
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::sync::{Arc, OnceLock};
 use std::time::Duration;
 
@@ -14,6 +13,7 @@ use argus_accounts::desktop::{Launch, Limits, ProcessApp};
 use argus_accounts::{AuthProbe, CliStatus, Credentials, DesktopApp, Usage, UsageSource};
 use argus_core::Coll;
 use argus_core::ids::PORTFOLIO;
+use argus_core::process::hidden_command;
 use argus_server::{ServeMode, ServeOptions};
 use argus_testkit::{Request, TestOptions, TestServer, Tweak};
 use serde_json::{Value, json};
@@ -66,7 +66,7 @@ fn fake_exe() -> PathBuf {
             .expect("profile dir");
         let name = format!("argus-fakeclaude{}", std::env::consts::EXE_SUFFIX);
         let cargo = std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_owned());
-        let mut build = Command::new(cargo);
+        let mut build = hidden_command(cargo);
         build.args(["build", "--quiet", "-p", "argus-fakeclaude"]);
         if profile.file_name().is_some_and(|n| n == "release") {
             build.arg("--release");
