@@ -235,7 +235,11 @@ async fn a_completed_cycle_means_the_switch_skips_the_handover() {
     assert_eq!(world.calls().last().unwrap(), "switch b false");
     let calls = world.calls();
     let spent = calls.iter().position(|c| c == "spend_cycle").unwrap();
-    assert_eq!(calls[spent + 1], "switch b false", "closed before the switch");
+    assert_eq!(
+        calls[spent + 1],
+        "switch b false",
+        "closed before the switch"
+    );
     desk.evaluate().await;
     assert_eq!(
         world.toasts().len(),

@@ -61,22 +61,24 @@ catalogs:
       specifier: ^4.1.11
       version: 4.1.12
 
+pnpmfileChecksum: sha256-oczAIu0/aWOztFA2mOtc7+K2/r0IP182lQwphJnZJx4=
+
 importers:
 
   .:
     devDependencies:
       '@drizztdourden08/brock-build':
-        specifier: ^0.123.0
-        version: 0.123.0(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
+        specifier: file:C:/Users/drizz/.coord/localpkg/tgz/brock-build-0.123.0-3e46ab01.tgz
+        version: file:C:/Users/drizz/.coord/localpkg/tgz/brock-build-0.123.0-3e46ab01.tgz(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
       '@drizztdourden08/brock-lint-config':
-        specifier: ^0.123.0
-        version: 0.123.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
+        specifier: file:C:/Users/drizz/.coord/localpkg/tgz/brock-lint-config-0.123.0-dcda675a.tgz
+        version: file:C:/Users/drizz/.coord/localpkg/tgz/brock-lint-config-0.123.0-dcda675a.tgz(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
       '@drizztdourden08/brock-thread':
-        specifier: ^0.123.0
-        version: 0.123.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
+        specifier: file:C:/Users/drizz/.coord/localpkg/tgz/brock-thread-0.123.0-7935b74a.tgz
+        version: file:C:/Users/drizz/.coord/localpkg/tgz/brock-thread-0.123.0-7935b74a.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
       '@drizztdourden08/standards':
-        specifier: ^0.15.0
-        version: 0.15.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
+        specifier: file:C:/Users/drizz/.coord/localpkg/tgz/standards-0.15.0-347bb1c7.tgz
+        version: file:C:/Users/drizz/.coord/localpkg/tgz/standards-0.15.0-347bb1c7.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
       '@resvg/resvg-js':
         specifier: 2.6.2
         version: 2.6.2
@@ -96,8 +98,8 @@ importers:
   apps/web:
     dependencies:
       '@drizztdourden08/tessera':
-        specifier: ^0.137.0
-        version: 0.137.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
+        specifier: file:C:/Users/drizz/.coord/localpkg/tgz/tessera-0.137.0-badb26b7.tgz
+        version: file:C:/Users/drizz/.coord/localpkg/tgz/tessera-0.137.0-badb26b7.tgz(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
       '@paper-design/shaders-react':
         specifier: 0.0.82
         version: 0.0.82(@types/react@19.3.0)(react@19.3.1)
@@ -112,14 +114,14 @@ importers:
         version: 7.18.4(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
     devDependencies:
       '@drizztdourden08/brock-build':
-        specifier: ^0.123.0
-        version: 0.123.0(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
+        specifier: file:C:/Users/drizz/.coord/localpkg/tgz/brock-build-0.123.0-3e46ab01.tgz
+        version: file:C:/Users/drizz/.coord/localpkg/tgz/brock-build-0.123.0-3e46ab01.tgz(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
       '@drizztdourden08/brock-lint-config':
-        specifier: ^0.123.0
-        version: 0.123.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
+        specifier: file:C:/Users/drizz/.coord/localpkg/tgz/brock-lint-config-0.123.0-dcda675a.tgz
+        version: file:C:/Users/drizz/.coord/localpkg/tgz/brock-lint-config-0.123.0-dcda675a.tgz(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
       '@drizztdourden08/standards':
-        specifier: ^0.15.0
-        version: 0.15.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
+        specifier: file:C:/Users/drizz/.coord/localpkg/tgz/standards-0.15.0-347bb1c7.tgz
+        version: file:C:/Users/drizz/.coord/localpkg/tgz/standards-0.15.0-347bb1c7.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
       '@testing-library/dom':
         specifier: 'catalog:'
         version: 10.4.2
@@ -329,8 +331,9 @@ packages:
     peerDependencies:
       postcss-selector-parser: ^7.1.1
 
-  '@drizztdourden08/brock-build@0.123.0':
-    resolution: {integrity: sha512-bOOVMkv7k+lCC6vo/UrHRLsaadDyIQdzxCc7ApCpcggeWCXGevcc5am3VrN5nNbQSU3mNMHEDLTpr8pDSk4m6g==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-build/0.123.0/b8867b8b3833a53c9cd250297cf3d9157f6d0f5b}
+  '@drizztdourden08/brock-build@file:C:/Users/drizz/.coord/localpkg/tgz/brock-build-0.123.0-3e46ab01.tgz':
+    resolution: {integrity: sha512-KSpvpl5b34ZdaROqSZ9GzcFpcZvpoHU/2lJJZ5Q/dHI0AtYTTKmDfZpNNSl4inS10/0EbaNs5C6gD8yplftv4A==, tarball: file:C:/Users/drizz/.coord/localpkg/tgz/brock-build-0.123.0-3e46ab01.tgz}
+    version: 0.123.0
     engines: {node: '>=24'}
     hasBin: true
     peerDependencies:
@@ -339,30 +342,45 @@ packages:
       electron-builder: '>=26'
       electron-vite: '>=5'
       playwright-core: '>=1.40'
+    peerDependenciesMeta:
+      electron-builder:
+        optional: true
+      playwright-core:
+        optional: true
 
-  '@drizztdourden08/brock-core@0.123.0':
-    resolution: {integrity: sha512-0z/77M+5HjqyxqdUALQGFtmVQ1B2dxnG1KzKzTL2ZLFRUKFVQj+8nKnFJneeqWyf/D1+fW7t4eduEQDUL640OA==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-core/0.123.0/bf66230af068893414221b6235234b70fc382f2e}
+  '@drizztdourden08/brock-core@file:C:/Users/drizz/.coord/localpkg/tgz/brock-core-0.123.0-279587ba.tgz':
+    resolution: {integrity: sha512-90mQTvwrYky4nL4fcI/uq2/sa8j4Cz2ohZtn67WbT8JdAkYVSDxgXlrWofq/PUPGwwZOIUj/XZF8VhVETwkRyQ==, tarball: file:C:/Users/drizz/.coord/localpkg/tgz/brock-core-0.123.0-279587ba.tgz}
+    version: 0.123.0
     engines: {node: '>=24'}
 
-  '@drizztdourden08/brock-lint-config@0.123.0':
-    resolution: {integrity: sha512-EzD/rHh0qTvhVOGMyHQy8W02AL0UGLjm3/Z715CAhcj7b/XTILgEmNGMJ2uc89gNQlcFI9nDjSsmtEniiZGV7g==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-lint-config/0.123.0/fa597c07a94df34d9e42a7db23a23487f19c1476}
+  '@drizztdourden08/brock-lint-config@file:C:/Users/drizz/.coord/localpkg/tgz/brock-lint-config-0.123.0-dcda675a.tgz':
+    resolution: {integrity: sha512-woexbJjqHm9I4jFHHLlAfegNLVF/S6mlr6dnZxRVisWh4pzfUzxZ/6IsBuxxTxrFybifde3kgpXb7OJie7MQdQ==, tarball: file:C:/Users/drizz/.coord/localpkg/tgz/brock-lint-config-0.123.0-dcda675a.tgz}
+    version: 0.123.0
     engines: {node: '>=24'}
     peerDependencies:
       eslint: ^10.0.0
       markdownlint-cli2: ^0.22.0
       stylelint: ^17.0.0
+    peerDependenciesMeta:
+      markdownlint-cli2:
+        optional: true
+      stylelint:
+        optional: true
 
-  '@drizztdourden08/brock-thread@0.123.0':
-    resolution: {integrity: sha512-WRAYBXZfscJWuT2dvthsaRnJYedjlfiuW56HmOZm1nhhZkQ0yLHUBuH2zrqlTh5okwDcJj9Ij4Bc79dl+rKjnw==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-thread/0.123.0/337e0c57e43604b840901bf77f25ed33ebe36942}
+  '@drizztdourden08/brock-thread@file:C:/Users/drizz/.coord/localpkg/tgz/brock-thread-0.123.0-7935b74a.tgz':
+    resolution: {integrity: sha512-JGCIuzyYzAPpaTHBTgmTwMrV4DDeZsnW9YrxeRwQeiW7lg3SpzRkFmBsAQdG+tEYwMQtqvoDxdejqoUE0varWQ==, tarball: file:C:/Users/drizz/.coord/localpkg/tgz/brock-thread-0.123.0-7935b74a.tgz}
+    version: 0.123.0
     engines: {node: '>=24'}
     hasBin: true
 
-  '@drizztdourden08/build-cache@0.123.0':
-    resolution: {integrity: sha512-QwkjxFNZ61X0JyEditWBZYtdAhdOpLMrmKAidtvFprqzp1unGI8gBc13CPvrvAJM2p4b07oa5jhQruuR98JObQ==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/build-cache/0.123.0/9a09441f93e5a95c3dbe17476ff77217dafd561b}
+  '@drizztdourden08/build-cache@file:C:/Users/drizz/.coord/localpkg/tgz/build-cache-0.123.0-c772dde8.tgz':
+    resolution: {integrity: sha512-Y15/m8Z2wGR+iEKJ0iWCW9lO6r0vt9ypHjga5goPhuqCKBWR4coDbtXUD7/dofweUb0tedwAJFLFPGH405I1rA==, tarball: file:C:/Users/drizz/.coord/localpkg/tgz/build-cache-0.123.0-c772dde8.tgz}
+    version: 0.123.0
     engines: {node: '>=24'}
 
-  '@drizztdourden08/standards@0.15.0':
-    resolution: {integrity: sha512-D+ZIULe5ETekfEw3NaYEpNIZaJfFE922n7ydwz6Q68keh9GIvUk0PJfSyrqEGeVjMbZPU8zIdxHucTTRwezZuA==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/standards/0.15.0/48e0721680677b127083ba0cd65059ac4a07be00}
+  '@drizztdourden08/standards@file:C:/Users/drizz/.coord/localpkg/tgz/standards-0.15.0-347bb1c7.tgz':
+    resolution: {integrity: sha512-GLlzfBEB0ry8/FOeni5TZkWuOP5J77M/I2lqLlPMA4HVOZ1pIytN+VwiFUcj1I3RFCc8wHRls7XRzJSVJ20WZA==, tarball: file:C:/Users/drizz/.coord/localpkg/tgz/standards-0.15.0-347bb1c7.tgz}
+    version: 0.15.0
     engines: {node: '>=24'}
     hasBin: true
     peerDependencies:
@@ -370,15 +388,26 @@ packages:
       stylelint: ^17.0.0
       typescript: ^6.0.0
       vitest: ^4.1.0
+    peerDependenciesMeta:
+      stylelint:
+        optional: true
+      typescript:
+        optional: true
+      vitest:
+        optional: true
 
-  '@drizztdourden08/tessera@0.137.0':
-    resolution: {integrity: sha512-2k4MjKPmCNRUkp1qeIEugi1wmpqDw/AK7DyQyIHRy6ih+v+Ds6onl0YTqJ2FrDtMI95TcCC0mb5zF+08eLUz0w==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/tessera/0.137.0/c765eb7400a9999ffd61dcc696753789b054938a}
+  '@drizztdourden08/tessera@file:C:/Users/drizz/.coord/localpkg/tgz/tessera-0.137.0-badb26b7.tgz':
+    resolution: {integrity: sha512-BnM2dxL9cX8MoLeHoKRbZK532LeN54734mgR70jZpx8N65tOjt6G/VG1O6iT6aO/CmT8EE2l8/nrYIltJA9Rsw==, tarball: file:C:/Users/drizz/.coord/localpkg/tgz/tessera-0.137.0-badb26b7.tgz}
+    version: 0.137.0
     engines: {node: '>=24'}
     hasBin: true
     peerDependencies:
       react: ^19.0.0
       react-dom: ^19.0.0
       typescript: '>=5.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   '@electron-internal/extract-zip@1.0.6':
     resolution: {integrity: sha512-/aQLgFDdCSnwChfUwqekSmE1q2dCTzhUy5saIHBb5vyYn5LzWaKPaIz1wM0lDMCZYBoIG4svJNvAJb6vkI8BuA==}
@@ -4376,21 +4405,22 @@ snapshots:
     dependencies:
       postcss-selector-parser: 7.1.7
 
-  '@drizztdourden08/brock-build@0.123.0(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))':
+  '@drizztdourden08/brock-build@file:C:/Users/drizz/.coord/localpkg/tgz/brock-build-0.123.0-3e46ab01.tgz(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))':
     dependencies:
-      '@drizztdourden08/brock-core': 0.123.0
-      '@drizztdourden08/brock-lint-config': 0.123.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
-      '@drizztdourden08/brock-thread': 0.123.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
-      '@drizztdourden08/build-cache': 0.123.0
-      '@drizztdourden08/standards': 0.15.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
+      '@drizztdourden08/brock-core': file:C:/Users/drizz/.coord/localpkg/tgz/brock-core-0.123.0-279587ba.tgz
+      '@drizztdourden08/brock-lint-config': file:C:/Users/drizz/.coord/localpkg/tgz/brock-lint-config-0.123.0-dcda675a.tgz(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
+      '@drizztdourden08/brock-thread': file:C:/Users/drizz/.coord/localpkg/tgz/brock-thread-0.123.0-7935b74a.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
+      '@drizztdourden08/build-cache': file:C:/Users/drizz/.coord/localpkg/tgz/build-cache-0.123.0-c772dde8.tgz
+      '@drizztdourden08/standards': file:C:/Users/drizz/.coord/localpkg/tgz/standards-0.15.0-347bb1c7.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
       '@resvg/resvg-js': 2.6.2
       '@vitejs/plugin-react': 5.2.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
       electron: 45.0.0
-      electron-builder: 26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0))
       electron-vite: 6.0.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
-      playwright-core: 1.64.1
       pngjs: 7.0.0
       rcedit: 5.0.2
+    optionalDependencies:
+      electron-builder: 26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0))
+      playwright-core: 1.64.1
     transitivePeerDependencies:
       - eslint
       - markdownlint-cli2
@@ -4399,21 +4429,22 @@ snapshots:
       - typescript
       - vitest
 
-  '@drizztdourden08/brock-build@0.123.0(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))':
+  '@drizztdourden08/brock-build@file:C:/Users/drizz/.coord/localpkg/tgz/brock-build-0.123.0-3e46ab01.tgz(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))':
     dependencies:
-      '@drizztdourden08/brock-core': 0.123.0
-      '@drizztdourden08/brock-lint-config': 0.123.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
-      '@drizztdourden08/brock-thread': 0.123.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
-      '@drizztdourden08/build-cache': 0.123.0
-      '@drizztdourden08/standards': 0.15.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
+      '@drizztdourden08/brock-core': file:C:/Users/drizz/.coord/localpkg/tgz/brock-core-0.123.0-279587ba.tgz
+      '@drizztdourden08/brock-lint-config': file:C:/Users/drizz/.coord/localpkg/tgz/brock-lint-config-0.123.0-dcda675a.tgz(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
+      '@drizztdourden08/brock-thread': file:C:/Users/drizz/.coord/localpkg/tgz/brock-thread-0.123.0-7935b74a.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
+      '@drizztdourden08/build-cache': file:C:/Users/drizz/.coord/localpkg/tgz/build-cache-0.123.0-c772dde8.tgz
+      '@drizztdourden08/standards': file:C:/Users/drizz/.coord/localpkg/tgz/standards-0.15.0-347bb1c7.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
       '@resvg/resvg-js': 2.6.2
       '@vitejs/plugin-react': 5.2.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1))
       electron: 45.0.0
-      electron-builder: 26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0))
       electron-vite: 6.0.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1))
-      playwright-core: 1.64.1
       pngjs: 7.0.0
       rcedit: 5.0.2
+    optionalDependencies:
+      electron-builder: 26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0))
+      playwright-core: 1.64.1
     transitivePeerDependencies:
       - eslint
       - markdownlint-cli2
@@ -4422,12 +4453,13 @@ snapshots:
       - typescript
       - vitest
 
-  '@drizztdourden08/brock-core@0.123.0': {}
+  '@drizztdourden08/brock-core@file:C:/Users/drizz/.coord/localpkg/tgz/brock-core-0.123.0-279587ba.tgz': {}
 
-  '@drizztdourden08/brock-lint-config@0.123.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))':
+  '@drizztdourden08/brock-lint-config@file:C:/Users/drizz/.coord/localpkg/tgz/brock-lint-config-0.123.0-dcda675a.tgz(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))':
     dependencies:
-      '@drizztdourden08/standards': 0.15.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
+      '@drizztdourden08/standards': file:C:/Users/drizz/.coord/localpkg/tgz/standards-0.15.0-347bb1c7.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
       eslint: 10.13.0(jiti@2.7.0)
+    optionalDependencies:
       markdownlint-cli2: 0.22.1
       stylelint: 17.16.0(typescript@6.0.3)
     transitivePeerDependencies:
@@ -4435,10 +4467,11 @@ snapshots:
       - typescript
       - vitest
 
-  '@drizztdourden08/brock-lint-config@0.123.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))':
+  '@drizztdourden08/brock-lint-config@file:C:/Users/drizz/.coord/localpkg/tgz/brock-lint-config-0.123.0-dcda675a.tgz(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))':
     dependencies:
-      '@drizztdourden08/standards': 0.15.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
+      '@drizztdourden08/standards': file:C:/Users/drizz/.coord/localpkg/tgz/standards-0.15.0-347bb1c7.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
       eslint: 10.13.0(jiti@2.7.0)
+    optionalDependencies:
       markdownlint-cli2: 0.22.1
       stylelint: 17.16.0(typescript@6.0.3)
     transitivePeerDependencies:
@@ -4446,10 +4479,10 @@ snapshots:
       - typescript
       - vitest
 
-  '@drizztdourden08/brock-thread@0.123.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))':
+  '@drizztdourden08/brock-thread@file:C:/Users/drizz/.coord/localpkg/tgz/brock-thread-0.123.0-7935b74a.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))':
     dependencies:
-      '@drizztdourden08/build-cache': 0.123.0
-      '@drizztdourden08/standards': 0.15.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
+      '@drizztdourden08/build-cache': file:C:/Users/drizz/.coord/localpkg/tgz/build-cache-0.123.0-c772dde8.tgz
+      '@drizztdourden08/standards': file:C:/Users/drizz/.coord/localpkg/tgz/standards-0.15.0-347bb1c7.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))
       yaml: 2.9.1
     transitivePeerDependencies:
       - eslint
@@ -4458,10 +4491,10 @@ snapshots:
       - typescript
       - vitest
 
-  '@drizztdourden08/brock-thread@0.123.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))':
+  '@drizztdourden08/brock-thread@file:C:/Users/drizz/.coord/localpkg/tgz/brock-thread-0.123.0-7935b74a.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))':
     dependencies:
-      '@drizztdourden08/build-cache': 0.123.0
-      '@drizztdourden08/standards': 0.15.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
+      '@drizztdourden08/build-cache': file:C:/Users/drizz/.coord/localpkg/tgz/build-cache-0.123.0-c772dde8.tgz
+      '@drizztdourden08/standards': file:C:/Users/drizz/.coord/localpkg/tgz/standards-0.15.0-347bb1c7.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))
       yaml: 2.9.1
     transitivePeerDependencies:
       - eslint
@@ -4470,11 +4503,11 @@ snapshots:
       - typescript
       - vitest
 
-  '@drizztdourden08/build-cache@0.123.0':
+  '@drizztdourden08/build-cache@file:C:/Users/drizz/.coord/localpkg/tgz/build-cache-0.123.0-c772dde8.tgz':
     dependencies:
       esbuild: 0.25.12
 
-  '@drizztdourden08/standards@0.15.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))':
+  '@drizztdourden08/standards@file:C:/Users/drizz/.coord/localpkg/tgz/standards-0.15.0-347bb1c7.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))':
     dependencies:
       '@eslint/js': 10.0.1(eslint@10.13.0(jiti@2.7.0))
       eslint: 10.13.0(jiti@2.7.0)
@@ -4482,15 +4515,16 @@ snapshots:
       jscpd: 5.4.2
       knip: 6.43.0
       markdownlint-cli2: 0.22.1
-      stylelint: 17.16.0(typescript@6.0.3)
       stylelint-config-standard: 40.0.0(stylelint@17.16.0(typescript@6.0.3))
-      typescript: 6.0.3
       typescript-eslint: 8.72.0(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3)
+    optionalDependencies:
+      stylelint: 17.16.0(typescript@6.0.3)
+      typescript: 6.0.3
       vitest: 4.1.12(@types/node@24.19.2)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
     transitivePeerDependencies:
       - supports-color
 
-  '@drizztdourden08/standards@0.15.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))':
+  '@drizztdourden08/standards@file:C:/Users/drizz/.coord/localpkg/tgz/standards-0.15.0-347bb1c7.tgz(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)(vitest@4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))':
     dependencies:
       '@eslint/js': 10.0.1(eslint@10.13.0(jiti@2.7.0))
       eslint: 10.13.0(jiti@2.7.0)
@@ -4498,15 +4532,16 @@ snapshots:
       jscpd: 5.4.2
       knip: 6.43.0
       markdownlint-cli2: 0.22.1
-      stylelint: 17.16.0(typescript@6.0.3)
       stylelint-config-standard: 40.0.0(stylelint@17.16.0(typescript@6.0.3))
-      typescript: 6.0.3
       typescript-eslint: 8.72.0(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3)
+    optionalDependencies:
+      stylelint: 17.16.0(typescript@6.0.3)
+      typescript: 6.0.3
       vitest: 4.1.12(@types/node@26.6.5)(jsdom@27.4.0(@noble/hashes@1.8.0))(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1))
     transitivePeerDependencies:
       - supports-color
 
-  '@drizztdourden08/tessera@0.137.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)':
+  '@drizztdourden08/tessera@file:C:/Users/drizz/.coord/localpkg/tgz/tessera-0.137.0-badb26b7.tgz(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)':
     dependencies:
       '@iconify-icons/lucide': 1.2.136
       '@iconify-icons/ph': 2.0.0
@@ -4519,6 +4554,7 @@ snapshots:
       react-dom: 19.3.1(react@19.3.1)
       react-markdown: 10.1.0(@types/react@19.3.0)(react@19.3.1)
       remark-gfm: 4.0.1
+    optionalDependencies:
       typescript: 6.0.3
     transitivePeerDependencies:
       - '@types/react'
@@ -4531,12 +4567,14 @@ snapshots:
       commander: 5.1.0
       glob: 7.2.3
       minimatch: 3.1.5
+    optional: true
 
   '@electron/fuses@1.8.0':
     dependencies:
       chalk: 4.1.2
       fs-extra: 9.1.0
       minimist: 1.2.8
+    optional: true
 
   '@electron/get@3.1.0':
     dependencies:
@@ -4551,6 +4589,7 @@ snapshots:
       global-agent: 3.0.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@electron/get@5.1.0':
     dependencies:
@@ -4572,6 +4611,7 @@ snapshots:
       promise-retry: 2.0.1
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@electron/osx-sign@1.3.3':
     dependencies:
@@ -4583,6 +4623,7 @@ snapshots:
       plist: 3.1.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@electron/rebuild@4.2.1':
     dependencies:
@@ -4594,6 +4635,7 @@ snapshots:
       read-binary-file-arch: 1.0.6
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@electron/universal@2.0.3':
     dependencies:
@@ -4606,6 +4648,7 @@ snapshots:
       plist: 3.1.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@electron/windows-sign@1.2.2':
     dependencies:
@@ -4866,6 +4909,7 @@ snapshots:
   '@isaacs/fs-minipass@4.0.1':
     dependencies:
       minipass: 7.1.3
+    optional: true
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
@@ -4935,6 +4979,7 @@ snapshots:
   '@malept/cross-spawn-promise@2.0.0':
     dependencies:
       cross-spawn: 7.0.6
+    optional: true
 
   '@malept/flatpak-bundler@0.4.0':
     dependencies:
@@ -4944,6 +4989,7 @@ snapshots:
       tmp-promise: 3.0.3
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@napi-rs/lzma-linux-x64-gnu@1.5.1':
     optional: true
@@ -4955,7 +5001,8 @@ snapshots:
       '@tybys/wasm-util': 0.10.4
     optional: true
 
-  '@noble/hashes@1.8.0': {}
+  '@noble/hashes@1.8.0':
+    optional: true
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -5103,14 +5150,17 @@ snapshots:
       '@peculiar/utils': 2.0.3
       asn1js: 3.1.0
       tslib: 2.8.1
+    optional: true
 
   '@peculiar/json-schema@1.1.12':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@peculiar/utils@2.0.3':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@peculiar/webcrypto@1.7.1':
     dependencies:
@@ -5119,6 +5169,7 @@ snapshots:
       '@peculiar/utils': 2.0.3
       tslib: 2.8.1
       webcrypto-core: 1.9.2
+    optional: true
 
   '@resvg/resvg-js-android-arm-eabi@2.6.2':
     optional: true
@@ -5295,7 +5346,8 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.65.0':
     optional: true
 
-  '@sindresorhus/is@4.6.0': {}
+  '@sindresorhus/is@4.6.0':
+    optional: true
 
   '@sindresorhus/merge-streams@4.0.0': {}
 
@@ -5304,6 +5356,7 @@ snapshots:
   '@szmarczak/http-timer@4.0.6':
     dependencies:
       defer-to-connect: 2.0.1
+    optional: true
 
   '@testing-library/dom@10.4.2':
     dependencies:
@@ -5360,6 +5413,7 @@ snapshots:
       '@types/keyv': 3.1.4
       '@types/node': 26.6.5
       '@types/responselike': 1.0.3
+    optional: true
 
   '@types/chai@5.2.3':
     dependencies:
@@ -5383,12 +5437,14 @@ snapshots:
   '@types/fs-extra@9.0.13':
     dependencies:
       '@types/node': 26.6.5
+    optional: true
 
   '@types/hast@3.0.5':
     dependencies:
       '@types/unist': 3.0.3
 
-  '@types/http-cache-semantics@4.2.0': {}
+  '@types/http-cache-semantics@4.2.0':
+    optional: true
 
   '@types/json-schema@7.0.15': {}
 
@@ -5397,6 +5453,7 @@ snapshots:
   '@types/keyv@3.1.4':
     dependencies:
       '@types/node': 26.6.5
+    optional: true
 
   '@types/mdast@4.0.4':
     dependencies:
@@ -5434,6 +5491,7 @@ snapshots:
   '@types/responselike@1.0.3':
     dependencies:
       '@types/node': 26.6.5
+    optional: true
 
   '@types/sarif@2.1.7': {}
 
@@ -5607,9 +5665,11 @@ snapshots:
       convert-source-map: 2.0.0
       tinyrainbow: 3.2.0
 
-  '@xmldom/xmldom@0.8.15': {}
+  '@xmldom/xmldom@0.8.15':
+    optional: true
 
-  abbrev@4.0.0: {}
+  abbrev@4.0.0:
+    optional: true
 
   acorn-jsx@5.3.2(acorn@8.19.0):
     dependencies:
@@ -5692,6 +5752,7 @@ snapshots:
       which: 5.0.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   argparse@2.0.1: {}
 
@@ -5706,6 +5767,7 @@ snapshots:
       pvtsutils: 1.3.6
       pvutils: 1.2.0
       tslib: 2.8.1
+    optional: true
 
   assert-never@1.4.0: {}
 
@@ -5713,15 +5775,20 @@ snapshots:
 
   astral-regex@2.0.0: {}
 
-  async-exit-hook@2.0.1: {}
+  async-exit-hook@2.0.1:
+    optional: true
 
-  async@3.2.6: {}
+  async@3.2.6:
+    optional: true
 
-  asynckit@0.4.0: {}
+  asynckit@0.4.0:
+    optional: true
 
-  at-least-node@1.0.0: {}
+  at-least-node@1.0.0:
+    optional: true
 
-  aws4@1.13.2: {}
+  aws4@1.13.2:
+    optional: true
 
   babel-walk@3.0.0-canary-5:
     dependencies:
@@ -5731,11 +5798,13 @@ snapshots:
 
   bail@2.0.2: {}
 
-  balanced-match@1.0.2: {}
+  balanced-match@1.0.2:
+    optional: true
 
   balanced-match@4.0.4: {}
 
-  base64-js@1.5.1: {}
+  base64-js@1.5.1:
+    optional: true
 
   baseline-browser-mapping@2.11.33: {}
 
@@ -5748,7 +5817,8 @@ snapshots:
       execa: 4.1.0
       which: 2.0.2
 
-  bluebird@3.7.2: {}
+  bluebird@3.7.2:
+    optional: true
 
   boolean@3.2.0:
     optional: true
@@ -5757,10 +5827,12 @@ snapshots:
     dependencies:
       balanced-match: 1.0.2
       concat-map: 0.0.1
+    optional: true
 
   brace-expansion@2.1.7:
     dependencies:
       balanced-match: 1.0.2
+    optional: true
 
   brace-expansion@5.0.12:
     dependencies:
@@ -5778,7 +5850,8 @@ snapshots:
       node-releases: 2.0.60
       update-browserslist-db: 1.3.4(browserslist@4.29.4)
 
-  buffer-from@1.1.2: {}
+  buffer-from@1.1.2:
+    optional: true
 
   builder-util-runtime@9.7.0:
     dependencies:
@@ -5786,6 +5859,7 @@ snapshots:
       sax: 1.6.1
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   builder-util@26.16.0:
     dependencies:
@@ -5805,14 +5879,17 @@ snapshots:
       tiny-async-pool: 1.3.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   bytes@3.1.2: {}
 
-  bytestreamjs@2.0.1: {}
+  bytestreamjs@2.0.1:
+    optional: true
 
   cac@7.1.0: {}
 
-  cacheable-lookup@5.0.4: {}
+  cacheable-lookup@5.0.4:
+    optional: true
 
   cacheable-request@7.0.4:
     dependencies:
@@ -5823,6 +5900,7 @@ snapshots:
       lowercase-keys: 2.0.0
       normalize-url: 6.1.0
       responselike: 2.0.1
+    optional: true
 
   cacheable@2.5.0:
     dependencies:
@@ -5854,6 +5932,7 @@ snapshots:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
+    optional: true
 
   character-entities-html4@2.1.0: {}
 
@@ -5867,13 +5946,17 @@ snapshots:
 
   character-reference-invalid@2.0.1: {}
 
-  chownr@3.0.0: {}
+  chownr@3.0.0:
+    optional: true
 
-  chromium-pickle-js@0.2.0: {}
+  chromium-pickle-js@0.2.0:
+    optional: true
 
-  ci-info@4.3.1: {}
+  ci-info@4.3.1:
+    optional: true
 
-  ci-info@4.4.0: {}
+  ci-info@4.4.0:
+    optional: true
 
   cli-table3@0.6.5:
     dependencies:
@@ -5886,10 +5969,12 @@ snapshots:
       string-width: 4.2.3
       strip-ansi: 6.0.1
       wrap-ansi: 7.0.0
+    optional: true
 
   clone-response@1.0.3:
     dependencies:
       mimic-response: 1.0.1
+    optional: true
 
   clsx@2.1.1: {}
 
@@ -5906,21 +5991,25 @@ snapshots:
   combined-stream@1.0.8:
     dependencies:
       delayed-stream: 1.0.0
+    optional: true
 
   comma-separated-tokens@2.0.3: {}
 
   commander@15.0.0: {}
 
-  commander@5.1.0: {}
+  commander@5.1.0:
+    optional: true
 
   commander@8.3.0: {}
 
   commander@9.5.0:
     optional: true
 
-  compare-version@0.1.2: {}
+  compare-version@0.1.2:
+    optional: true
 
-  concat-map@0.0.1: {}
+  concat-map@0.0.1:
+    optional: true
 
   constantinople@4.0.1:
     dependencies:
@@ -5931,7 +6020,8 @@ snapshots:
 
   cookie@1.1.1: {}
 
-  core-util-is@1.0.3: {}
+  core-util-is@1.0.3:
+    optional: true
 
   cosmiconfig@9.0.2(typescript@6.0.3):
     dependencies:
@@ -5993,10 +6083,12 @@ snapshots:
   decompress-response@6.0.0:
     dependencies:
       mimic-response: 3.1.0
+    optional: true
 
   deep-is@0.1.4: {}
 
-  defer-to-connect@2.0.1: {}
+  defer-to-connect@2.0.1:
+    optional: true
 
   define-data-property@1.1.4:
     dependencies:
@@ -6012,7 +6104,8 @@ snapshots:
       object-keys: 1.1.1
     optional: true
 
-  delayed-stream@1.0.0: {}
+  delayed-stream@1.0.0:
+    optional: true
 
   dequal@2.0.3: {}
 
@@ -6027,6 +6120,7 @@ snapshots:
     dependencies:
       minimatch: 3.1.5
       p-limit: 3.1.0
+    optional: true
 
   dmg-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)):
     dependencies:
@@ -6037,6 +6131,7 @@ snapshots:
     transitivePeerDependencies:
       - electron-builder-squirrel-windows
       - supports-color
+    optional: true
 
   doctypes@1.1.0: {}
 
@@ -6045,8 +6140,10 @@ snapshots:
   dotenv-expand@11.0.7:
     dependencies:
       dotenv: 16.6.1
+    optional: true
 
-  dotenv@16.6.1: {}
+  dotenv@16.6.1:
+    optional: true
 
   dunder-proto@1.0.1:
     dependencies:
@@ -6057,10 +6154,12 @@ snapshots:
   duplexer2@0.1.4:
     dependencies:
       readable-stream: 2.3.8
+    optional: true
 
   ejs@3.1.10:
     dependencies:
       jake: 10.9.4
+    optional: true
 
   electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0):
     dependencies:
@@ -6070,6 +6169,7 @@ snapshots:
     transitivePeerDependencies:
       - dmg-builder
       - supports-color
+    optional: true
 
   electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)):
     dependencies:
@@ -6086,6 +6186,7 @@ snapshots:
     transitivePeerDependencies:
       - electron-builder-squirrel-windows
       - supports-color
+    optional: true
 
   electron-publish@26.18.0:
     dependencies:
@@ -6100,6 +6201,7 @@ snapshots:
       mime: 2.6.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   electron-to-chromium@1.5.464: {}
 
@@ -6138,6 +6240,7 @@ snapshots:
       '@electron/windows-sign': 1.2.2
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   electron@45.0.0:
     dependencies:
@@ -6161,7 +6264,8 @@ snapshots:
 
   env-paths@3.0.0: {}
 
-  err-code@2.0.3: {}
+  err-code@2.0.3:
+    optional: true
 
   error-ex@1.3.4:
     dependencies:
@@ -6183,6 +6287,7 @@ snapshots:
       get-intrinsic: 1.3.0
       has-tostringtag: 1.0.2
       hasown: 2.0.4
+    optional: true
 
   es6-error@4.1.1:
     optional: true
@@ -6350,7 +6455,8 @@ snapshots:
 
   expect-type@1.4.0: {}
 
-  exponential-backoff@3.1.3: {}
+  exponential-backoff@3.1.3:
+    optional: true
 
   extend@3.0.2: {}
 
@@ -6391,6 +6497,7 @@ snapshots:
   filelist@1.0.6:
     dependencies:
       minimatch: 5.1.9
+    optional: true
 
   fill-range@7.1.1:
     dependencies:
@@ -6416,6 +6523,7 @@ snapshots:
       es-set-tostringtag: 2.1.0
       hasown: 2.0.4
       mime-types: 2.1.35
+    optional: true
 
   formatly@0.11.4:
     dependencies:
@@ -6431,12 +6539,14 @@ snapshots:
       graceful-fs: 4.2.11
       jsonfile: 6.2.1
       universalify: 2.0.1
+    optional: true
 
   fs-extra@11.3.1:
     dependencies:
       graceful-fs: 4.2.11
       jsonfile: 6.2.1
       universalify: 2.0.1
+    optional: true
 
   fs-extra@11.4.1:
     dependencies:
@@ -6449,12 +6559,14 @@ snapshots:
       graceful-fs: 4.2.11
       jsonfile: 4.0.0
       universalify: 0.1.2
+    optional: true
 
   fs-extra@8.1.0:
     dependencies:
       graceful-fs: 4.2.11
       jsonfile: 4.0.0
       universalify: 0.1.2
+    optional: true
 
   fs-extra@9.1.0:
     dependencies:
@@ -6462,8 +6574,10 @@ snapshots:
       graceful-fs: 4.2.11
       jsonfile: 6.2.1
       universalify: 2.0.1
+    optional: true
 
-  fs.realpath@1.0.0: {}
+  fs.realpath@1.0.0:
+    optional: true
 
   fsevents@2.3.3:
     optional: true
@@ -6472,7 +6586,8 @@ snapshots:
 
   gensync@1.0.0-beta.2: {}
 
-  get-caller-file@2.0.5: {}
+  get-caller-file@2.0.5:
+    optional: true
 
   get-east-asian-width@1.7.0: {}
 
@@ -6518,6 +6633,7 @@ snapshots:
       minimatch: 3.1.5
       once: 1.4.0
       path-is-absolute: 1.0.1
+    optional: true
 
   global-agent@3.0.0:
     dependencies:
@@ -6581,10 +6697,12 @@ snapshots:
       lowercase-keys: 2.0.0
       p-cancelable: 2.1.1
       responselike: 2.0.1
+    optional: true
 
   graceful-fs@4.2.11: {}
 
-  has-flag@4.0.0: {}
+  has-flag@4.0.0:
+    optional: true
 
   has-flag@5.0.1: {}
 
@@ -6644,6 +6762,7 @@ snapshots:
   hosted-git-info@4.1.0:
     dependencies:
       lru-cache: 6.0.0
+    optional: true
 
   html-encoding-sniffer@6.0.0(@noble/hashes@1.8.0):
     dependencies:
@@ -6655,7 +6774,8 @@ snapshots:
 
   html-url-attributes@3.0.1: {}
 
-  http-cache-semantics@4.3.0: {}
+  http-cache-semantics@4.3.0:
+    optional: true
 
   http-proxy-agent@7.0.2:
     dependencies:
@@ -6668,6 +6788,7 @@ snapshots:
     dependencies:
       quick-lru: 5.1.1
       resolve-alpn: 1.2.1
+    optional: true
 
   https-proxy-agent@7.0.6:
     dependencies:
@@ -6695,8 +6816,10 @@ snapshots:
     dependencies:
       once: 1.4.0
       wrappy: 1.0.2
+    optional: true
 
-  inherits@2.0.4: {}
+  inherits@2.0.4:
+    optional: true
 
   ini@1.3.8: {}
 
@@ -6757,23 +6880,29 @@ snapshots:
     dependencies:
       is-docker: 2.2.1
 
-  isarray@1.0.0: {}
+  isarray@1.0.0:
+    optional: true
 
-  isbinaryfile@4.0.10: {}
+  isbinaryfile@4.0.10:
+    optional: true
 
-  isbinaryfile@5.0.7: {}
+  isbinaryfile@5.0.7:
+    optional: true
 
   isexe@2.0.0: {}
 
-  isexe@3.1.5: {}
+  isexe@3.1.5:
+    optional: true
 
-  isexe@4.0.0: {}
+  isexe@4.0.0:
+    optional: true
 
   jake@10.9.4:
     dependencies:
       async: 3.2.6
       filelist: 1.0.6
       picocolors: 1.1.1
+    optional: true
 
   jiti@2.7.0: {}
 
@@ -6872,7 +7001,8 @@ snapshots:
 
   jsesc@3.1.0: {}
 
-  json-buffer@3.0.1: {}
+  json-buffer@3.0.1:
+    optional: true
 
   json-parse-even-better-errors@2.3.1: {}
 
@@ -6892,6 +7022,7 @@ snapshots:
   jsonfile@4.0.0:
     optionalDependencies:
       graceful-fs: 4.2.11
+    optional: true
 
   jsonfile@6.2.1:
     dependencies:
@@ -6913,6 +7044,7 @@ snapshots:
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
+    optional: true
 
   keyv@5.6.0:
     dependencies:
@@ -6953,7 +7085,8 @@ snapshots:
       yaml: 2.9.1
       zod: 4.6.7
 
-  lazy-val@1.0.5: {}
+  lazy-val@1.0.5:
+    optional: true
 
   levn@0.4.1:
     dependencies:
@@ -6982,7 +7115,8 @@ snapshots:
     dependencies:
       js-tokens: 4.0.0
 
-  lowercase-keys@2.0.0: {}
+  lowercase-keys@2.0.0:
+    optional: true
 
   lru-cache@11.5.3: {}
 
@@ -6993,6 +7127,7 @@ snapshots:
   lru-cache@6.0.0:
     dependencies:
       yallist: 4.0.0
+    optional: true
 
   lz-string@1.5.0: {}
 
@@ -7500,19 +7635,24 @@ snapshots:
       braces: 3.0.3
       picomatch: 2.3.2
 
-  mime-db@1.52.0: {}
+  mime-db@1.52.0:
+    optional: true
 
   mime-types@2.1.35:
     dependencies:
       mime-db: 1.52.0
+    optional: true
 
-  mime@2.6.0: {}
+  mime@2.6.0:
+    optional: true
 
   mimic-fn@2.1.0: {}
 
-  mimic-response@1.0.1: {}
+  mimic-response@1.0.1:
+    optional: true
 
-  mimic-response@3.1.0: {}
+  mimic-response@3.1.0:
+    optional: true
 
   minimatch@10.2.6:
     dependencies:
@@ -7521,26 +7661,32 @@ snapshots:
   minimatch@3.1.5:
     dependencies:
       brace-expansion: 1.1.21
+    optional: true
 
   minimatch@5.1.9:
     dependencies:
       brace-expansion: 2.1.7
+    optional: true
 
   minimatch@9.0.9:
     dependencies:
       brace-expansion: 2.1.7
+    optional: true
 
   minimist@1.2.8: {}
 
-  minipass@7.1.3: {}
+  minipass@7.1.3:
+    optional: true
 
   minizlib@3.1.0:
     dependencies:
       minipass: 7.1.3
+    optional: true
 
   mkdirp@0.5.6:
     dependencies:
       minimist: 1.2.8
+    optional: true
 
   ms@2.1.3: {}
 
@@ -7551,10 +7697,12 @@ snapshots:
   node-abi@4.40.0:
     dependencies:
       semver: 7.8.5
+    optional: true
 
   node-api-version@0.2.1:
     dependencies:
       semver: 7.8.5
+    optional: true
 
   node-gyp@12.4.0:
     dependencies:
@@ -7568,8 +7716,10 @@ snapshots:
       tinyglobby: 0.2.17
       undici: 6.29.1
       which: 6.0.1
+    optional: true
 
-  node-int64@0.4.0: {}
+  node-int64@0.4.0:
+    optional: true
 
   node-releases@2.0.60: {}
 
@@ -7581,10 +7731,12 @@ snapshots:
   nopt@9.0.0:
     dependencies:
       abbrev: 4.0.0
+    optional: true
 
   normalize-path@3.0.0: {}
 
-  normalize-url@6.1.0: {}
+  normalize-url@6.1.0:
+    optional: true
 
   npm-run-path@4.0.1:
     dependencies:
@@ -7660,7 +7812,8 @@ snapshots:
       '@oxc-resolver/binding-win32-arm64-msvc': 11.24.2
       '@oxc-resolver/binding-win32-x64-msvc': 11.24.2
 
-  p-cancelable@2.1.1: {}
+  p-cancelable@2.1.1:
+    optional: true
 
   p-limit@3.1.0:
     dependencies:
@@ -7699,7 +7852,8 @@ snapshots:
 
   path-exists@4.0.0: {}
 
-  path-is-absolute@1.0.1: {}
+  path-is-absolute@1.0.1:
+    optional: true
 
   path-key@3.1.1: {}
 
@@ -7707,7 +7861,8 @@ snapshots:
 
   pathe@2.0.3: {}
 
-  pe-library@0.4.1: {}
+  pe-library@0.4.1:
+    optional: true
 
   picocolors@1.1.1: {}
 
@@ -7723,14 +7878,17 @@ snapshots:
       pvtsutils: 1.3.6
       pvutils: 1.2.0
       tslib: 2.8.1
+    optional: true
 
-  playwright-core@1.64.1: {}
+  playwright-core@1.64.1:
+    optional: true
 
   plist@3.1.0:
     dependencies:
       '@xmldom/xmldom': 0.8.15
       base64-js: 1.5.1
       xmlbuilder: 15.1.1
+    optional: true
 
   pngjs@7.0.0: {}
 
@@ -7770,9 +7928,11 @@ snapshots:
       clsx: 2.1.1
       react: 19.3.1
 
-  proc-log@6.1.0: {}
+  proc-log@6.1.0:
+    optional: true
 
-  process-nextick-args@2.0.1: {}
+  process-nextick-args@2.0.1:
+    optional: true
 
   progress@2.0.3: {}
 
@@ -7780,6 +7940,7 @@ snapshots:
     dependencies:
       err-code: 2.0.3
       retry: 0.12.0
+    optional: true
 
   promise@7.3.1:
     dependencies:
@@ -7796,6 +7957,7 @@ snapshots:
       graceful-fs: 4.2.11
       retry: 0.12.0
       signal-exit: 3.0.7
+    optional: true
 
   property-information@7.2.0: {}
 
@@ -7878,8 +8040,10 @@ snapshots:
   pvtsutils@1.3.6:
     dependencies:
       tslib: 2.8.1
+    optional: true
 
-  pvutils@1.2.0: {}
+  pvutils@1.2.0:
+    optional: true
 
   qified@0.10.1:
     dependencies:
@@ -7887,7 +8051,8 @@ snapshots:
 
   queue-microtask@1.2.3: {}
 
-  quick-lru@5.1.1: {}
+  quick-lru@5.1.1:
+    optional: true
 
   rcedit@5.0.2:
     dependencies:
@@ -7953,6 +8118,7 @@ snapshots:
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   readable-stream@2.3.8:
     dependencies:
@@ -7963,6 +8129,7 @@ snapshots:
       safe-buffer: 5.1.2
       string_decoder: 1.1.1
       util-deprecate: 1.0.2
+    optional: true
 
   remark-gfm@4.0.1:
     dependencies:
@@ -8000,15 +8167,18 @@ snapshots:
 
   repeat-string@1.6.1: {}
 
-  require-directory@2.1.1: {}
+  require-directory@2.1.1:
+    optional: true
 
   require-from-string@2.0.2: {}
 
   resedit@1.7.2:
     dependencies:
       pe-library: 0.4.1
+    optional: true
 
-  resolve-alpn@1.2.1: {}
+  resolve-alpn@1.2.1:
+    optional: true
 
   resolve-from@4.0.0: {}
 
@@ -8024,14 +8194,17 @@ snapshots:
   responselike@2.0.1:
     dependencies:
       lowercase-keys: 2.0.0
+    optional: true
 
-  retry@0.12.0: {}
+  retry@0.12.0:
+    optional: true
 
   reusify@1.1.0: {}
 
   rimraf@2.6.3:
     dependencies:
       glob: 7.2.3
+    optional: true
 
   roarr@2.15.4:
     dependencies:
@@ -8100,13 +8273,16 @@ snapshots:
     dependencies:
       queue-microtask: 1.2.3
 
-  safe-buffer@5.1.2: {}
+  safe-buffer@5.1.2:
+    optional: true
 
   sanitize-filename@1.6.4:
     dependencies:
       truncate-utf8-bytes: 1.0.2
+    optional: true
 
-  sax@1.6.1: {}
+  sax@1.6.1:
+    optional: true
 
   saxes@6.0.0:
     dependencies:
@@ -8117,11 +8293,13 @@ snapshots:
   semver-compare@1.0.0:
     optional: true
 
-  semver@5.7.2: {}
+  semver@5.7.2:
+    optional: true
 
   semver@6.3.1: {}
 
-  semver@7.7.4: {}
+  semver@7.7.4:
+    optional: true
 
   semver@7.8.5: {}
 
@@ -8147,6 +8325,7 @@ snapshots:
   simple-update-notifier@2.0.0:
     dependencies:
       semver: 7.8.5
+    optional: true
 
   slash@5.1.0: {}
 
@@ -8166,8 +8345,10 @@ snapshots:
     dependencies:
       buffer-from: 1.1.2
       source-map: 0.6.1
+    optional: true
 
-  source-map@0.6.1: {}
+  source-map@0.6.1:
+    optional: true
 
   space-separated-tokens@2.0.2: {}
 
@@ -8178,7 +8359,8 @@ snapshots:
 
   stackback@0.0.2: {}
 
-  stat-mode@1.0.0: {}
+  stat-mode@1.0.0:
+    optional: true
 
   std-env@4.3.0: {}
 
@@ -8201,6 +8383,7 @@ snapshots:
   string_decoder@1.1.1:
     dependencies:
       safe-buffer: 5.1.2
+    optional: true
 
   stringify-entities@4.0.4:
     dependencies:
@@ -8288,6 +8471,7 @@ snapshots:
   supports-color@7.2.0:
     dependencies:
       has-flag: 4.0.0
+    optional: true
 
   supports-hyperlinks@4.6.0:
     dependencies:
@@ -8315,20 +8499,24 @@ snapshots:
       minipass: 7.1.3
       minizlib: 3.1.0
       yallist: 5.0.0
+    optional: true
 
   temp-file@3.4.0:
     dependencies:
       async-exit-hook: 2.0.1
       fs-extra: 10.1.0
+    optional: true
 
   temp@0.9.4:
     dependencies:
       mkdirp: 0.5.6
       rimraf: 2.6.3
+    optional: true
 
   tiny-async-pool@1.3.0:
     dependencies:
       semver: 5.7.2
+    optional: true
 
   tinybench@2.9.0: {}
 
@@ -8352,8 +8540,10 @@ snapshots:
   tmp-promise@3.0.3:
     dependencies:
       tmp: 0.2.7
+    optional: true
 
-  tmp@0.2.7: {}
+  tmp@0.2.7:
+    optional: true
 
   to-regex-range@5.0.1:
     dependencies:
@@ -8376,12 +8566,14 @@ snapshots:
   truncate-utf8-bytes@1.0.2:
     dependencies:
       utf8-byte-length: 1.0.5
+    optional: true
 
   ts-api-utils@2.5.0(typescript@6.0.3):
     dependencies:
       typescript: 6.0.3
 
-  tslib@2.8.1: {}
+  tslib@2.8.1:
+    optional: true
 
   type-check@0.4.0:
     dependencies:
@@ -8413,7 +8605,8 @@ snapshots:
 
   undici-types@8.9.0: {}
 
-  undici@6.29.1: {}
+  undici@6.29.1:
+    optional: true
 
   undici@7.30.1:
     optional: true
@@ -8453,7 +8646,8 @@ snapshots:
       unist-util-is: 6.0.1
       unist-util-visit-parents: 6.1.0
 
-  universalify@0.1.2: {}
+  universalify@0.1.2:
+    optional: true
 
   universalify@2.0.1: {}
 
@@ -8464,6 +8658,7 @@ snapshots:
       fs-extra: 11.3.1
       graceful-fs: 4.2.11
       node-int64: 0.4.0
+    optional: true
 
   update-browserslist-db@1.3.4(browserslist@4.29.4):
     dependencies:
@@ -8475,7 +8670,8 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  utf8-byte-length@1.0.5: {}
+  utf8-byte-length@1.0.5:
+    optional: true
 
   util-deprecate@1.0.2: {}
 
@@ -8588,6 +8784,7 @@ snapshots:
       '@peculiar/utils': 2.0.3
       asn1js: 3.1.0
       tslib: 2.8.1
+    optional: true
 
   webidl-conversions@8.0.1: {}
 
@@ -8611,10 +8808,12 @@ snapshots:
   which@5.0.0:
     dependencies:
       isexe: 3.1.5
+    optional: true
 
   which@6.0.1:
     dependencies:
       isexe: 4.0.0
+    optional: true
 
   why-is-node-running@2.3.0:
     dependencies:
@@ -8635,6 +8834,7 @@ snapshots:
       ansi-styles: 4.3.0
       string-width: 4.2.3
       strip-ansi: 6.0.1
+    optional: true
 
   wrappy@1.0.2: {}
 
@@ -8646,21 +8846,26 @@ snapshots:
 
   xml-name-validator@5.0.0: {}
 
-  xmlbuilder@15.1.1: {}
+  xmlbuilder@15.1.1:
+    optional: true
 
   xmlchars@2.2.0: {}
 
-  y18n@5.0.8: {}
+  y18n@5.0.8:
+    optional: true
 
   yallist@3.1.1: {}
 
-  yallist@4.0.0: {}
+  yallist@4.0.0:
+    optional: true
 
-  yallist@5.0.0: {}
+  yallist@5.0.0:
+    optional: true
 
   yaml@2.9.1: {}
 
-  yargs-parser@21.1.1: {}
+  yargs-parser@21.1.1:
+    optional: true
 
   yargs@17.7.3:
     dependencies:
@@ -8671,6 +8876,7 @@ snapshots:
       string-width: 4.2.3
       y18n: 5.0.8
       yargs-parser: 21.1.1
+    optional: true
 
   yocto-queue@0.1.0: {}
 

@@ -108,10 +108,11 @@ impl Live {
         let active_view = active
             .as_deref()
             .and_then(|key| accounts.iter().find(|v| v.key == key));
+        let cycle = cycle_view(cycle.as_ref(), active_view);
         Snapshot {
             accounts,
             estimates,
-            cycle: cycle_view(cycle.as_ref(), active_view),
+            cycle,
             plan,
             active,
         }
