@@ -210,7 +210,7 @@ pub struct Prepared {
     origin: Origin,
     handover: bool,
     id: String,
-    /// The warning of an automatic switch on a Claude version no switch confirmed yet.
+    /// The warning of a switch on a Claude version no switch confirmed yet.
     warning: Option<String>,
     control: Control,
     _slot: Slot,
@@ -259,13 +259,10 @@ pub fn prepare(
         return Err(format!("{} cannot be switched to", target.label));
     }
     let vault = FsVault::new(&app, &logins_root(svc));
-    let mut warning = None;
-    if origin == Origin::Rule {
-        if vault.saved_at(&target).is_none() {
-            return Err(format!("{} has no saved login yet", target.label));
-        }
-        warning = version_warning(svc, &config);
+    if origin == Origin::Rule && vault.saved_at(&target).is_none() {
+        return Err(format!("{} has no saved login yet", target.label));
     }
+    let warning = version_warning(svc, &config, origin);
     let leftover = match repair(
         &journal_of(svc),
         &*accounts.desktop(&app),
@@ -300,7 +297,7 @@ pub fn prepare(
     })
 }
 
-/// The warning step of an automatic switch on a Claude version that no switch confirmed yet;
+/// The warning step of a switch on a Claude version that no switch confirmed yet;
 /// `None` when the version is the confirmed one.
 fn unverified_text(current: Option<&str>, verified: Option<&str>) -> Option<String> {
     match current {
@@ -315,19 +312,30 @@ fn unverified_text(current: Option<&str>, verified: Option<&str>) -> Option<Stri
     }
 }
 
-/// An automatic switch never stops on a new Claude version: it goes on with a warning step, and
-/// the owner is told once per version.
-fn version_warning(svc: &Services, config: &argus_accounts::AccountsConfig) -> Option<String> {
+/// No switch stops on a new Claude version: it goes on with a warning step. An automatic switch
+/// also tells the owner, once per version; the owner who switches by hand sees the step.
+fn version_warning(
+    svc: &Services,
+    config: &argus_accounts::AccountsConfig,
+    origin: Origin,
+) -> Option<String> {
     let current = cached_version();
     let text = unverified_text(current.as_deref(), config.verified_app_version.as_deref())?;
-    let seen = current.unwrap_or_default();
+    if origin == Origin::Rule {
+        tell_once(svc, current.unwrap_or_default(), &text);
+    }
+    Some(text)
+}
+
+/// Pings the owner about the Claude version `seen`, unless it was told about that one already.
+fn tell_once(svc: &Services, seen: String, text: &str) {
     let mut told = TOLD_VERSION.lock().unwrap_or_else(PoisonError::into_inner);
     if told.as_deref() != Some(seen.as_str()) {
         *told = Some(seen);
         if let Some(notify) = &svc.notify {
             notify.send(PingRequest {
                 title: Some("Claude was updated".to_owned()),
-                text: text.clone(),
+                text: text.to_owned(),
                 level: Level::Ping,
                 project: None,
                 thread: None,
@@ -336,7 +344,6 @@ fn version_warning(svc: &Services, config: &argus_accounts::AccountsConfig) -> O
             });
         }
     }
-    Some(text)
 }
 
 /// The `switch` doc as it is shown now.
@@ -901,7 +908,20 @@ fn put_login(
 mod tests {
     use argus_accounts::desktop::{Done, Step, StepStatus};
 
-    use super::{Backup, Control, Origin, outcome_of, switch_doc, with_error};
+    use super::{Backup, Control, Origin, outcome_of, switch_doc, unverified_text, with_error};
+
+    #[test]
+    fn the_confirmed_version_has_no_warning() {
+        assert_eq!(unverified_text(Some("1.2"), Some("1.2")), None);
+    }
+
+    #[test]
+    fn a_new_or_unreadable_version_has_a_warning() {
+        let new = unverified_text(Some("1.3"), Some("1.2")).unwrap_or_default();
+        assert!(new.contains("Claude 1.3"), "{new}");
+        let none = unverified_text(None, Some("1.2")).unwrap_or_default();
+        assert!(none.contains("could not be read"), "{none}");
+    }
 
     #[test]
     fn a_rollback_gets_the_backup_of_the_sync_once() {
