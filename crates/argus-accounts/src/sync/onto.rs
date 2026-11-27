@@ -41,6 +41,7 @@ fn plan_onto(env: &Env, scan: Scan, route: &Route) -> Result<Planned, String> {
         catalog,
         kinds,
         folders,
+        target: Some(route.target.clone()),
     })
 }
 

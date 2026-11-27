@@ -10,7 +10,9 @@ use rusty_leveldb::{DB, LdbIterator, Options};
 use serde_json::Value;
 
 use super::SidebarKeys;
+use super::flags::put_flags;
 use crate::ports::SidebarStore;
+use crate::types::Scope;
 
 /// The prefix of every key the claude.ai origin owns in the store.
 pub const KEY_PREFIX: &[u8] = b"_https://claude.ai\x00\x01";
@@ -24,8 +26,8 @@ pub const KEY_NAMES: [&str; 3] = [
 /// Why a write is refused when the live keys are not the scanned ones.
 pub const CHANGED: &str = "folders changed since the scan; run the sync again";
 
-const UTF16: u8 = 0;
-const LATIN1: u8 = 1;
+pub(super) const UTF16: u8 = 0;
+pub(super) const LATIN1: u8 = 1;
 
 /// Splits a stored value into its encoding byte and the JSON it holds.
 ///
@@ -89,7 +91,7 @@ pub fn bump_timestamp(wrapper: &mut Value, now_ms: i64) {
     }
 }
 
-fn full_key(name: &str) -> Vec<u8> {
+pub(super) fn full_key(name: &str) -> Vec<u8> {
     let mut k = KEY_PREFIX.to_vec();
     k.extend_from_slice(name.as_bytes());
     k
@@ -230,12 +232,18 @@ impl LevelDbSidebar {
     /// # Errors
     /// When Claude holds the store's lock, the live keys changed since the scan, or on any
     /// read or write failure.
-    pub fn write_keys(&self, keys: &SidebarKeys, scanned: &SidebarKeys) -> Result<(), String> {
+    pub fn write_keys(
+        &self,
+        keys: &SidebarKeys,
+        scanned: &SidebarKeys,
+        target: Option<&Scope>,
+    ) -> Result<(), String> {
         ensure_unlocked(&self.dir)?;
         let mut stamped = keys.clone();
         let now = now_ms();
         bump_timestamp(&mut stamped.code_sections, now);
         bump_timestamp(&mut stamped.group_scopes, now);
+        bump_timestamp(&mut stamped.dframe_store, now);
         let values = [
             &stamped.code_sections,
             &stamped.group_scopes,
@@ -251,6 +259,9 @@ impl LevelDbSidebar {
             db.put(&full_key(name), &raw)
                 .map_err(|e| format!("cannot write `{name}`: {e}"))?;
         }
+        if let Some(target) = target {
+            put_flags(&mut db, target)?;
+        }
         db.flush()
             .map_err(|e| format!("cannot flush the store: {e}"))?;
         db.close()
@@ -263,10 +274,16 @@ impl SidebarStore for LevelDbSidebar {
         self.read_keys().map(|k| k.to_value())
     }
 
-    fn write(&self, keys: &Value, scanned: &Value) -> Result<(), String> {
+    fn write(
+        &self,
+        keys: &Value,
+        scanned: &Value,
+        target: Option<&Scope>,
+    ) -> Result<(), String> {
         self.write_keys(
             &SidebarKeys::from_value(keys)?,
             &SidebarKeys::from_value(scanned)?,
+            target,
         )
     }
 }
@@ -276,6 +293,7 @@ impl SidebarStore for LevelDbSidebar {
 mod tests {
     use serde_json::json;
 
+    use super::super::flags::{PENDING_BASE, encode_text, flag_text};
     use super::*;
 
     #[test]
@@ -356,8 +374,62 @@ mod tests {
         let store = LevelDbSidebar::at(dir.path().to_path_buf());
         let mut stale = live.clone();
         stale.dframe_store = json!({"state": {"older": true}});
-        assert_eq!(store.write_keys(&live, &stale), Err(CHANGED.to_owned()));
-        assert!(store.write_keys(&live, &live).is_ok());
+        assert_eq!(store.write_keys(&live, &stale, None), Err(CHANGED.to_owned()));
+        assert!(store.write_keys(&live, &live, None).is_ok());
+    }
+
+    fn seeded(dir: &Path, dframe_store: Value) -> SidebarKeys {
+        let opt = Options {
+            create_if_missing: true,
+            ..Options::default()
+        };
+        let mut db = DB::open(dir, opt).unwrap();
+        let live = SidebarKeys {
+            code_sections: json!({"value": {}, "tabId": "", "timestamp": 1}),
+            group_scopes: json!({"value": {}, "tabId": "", "timestamp": 1}),
+            dframe_store,
+            encodings: [1, 1, 1],
+        };
+        let values = [&live.code_sections, &live.group_scopes, &live.dframe_store];
+        for (name, value) in KEY_NAMES.iter().zip(values) {
+            db.put(&full_key(name), &encode_value(1, value).unwrap())
+                .unwrap();
+        }
+        db.put(&full_key(PENDING_BASE), &encode_text("old")).unwrap();
+        db.close().unwrap();
+        live
+    }
+
+    #[test]
+    fn a_write_with_a_target_sets_the_flags_and_drops_the_base() {
+        let dir = tempfile::tempdir().unwrap();
+        let live = seeded(dir.path(), json!({"state": {}, "timestamp": 1}));
+        let target = Scope {
+            account: "acc-1".into(),
+            org: "org-1".into(),
+        };
+        let store = LevelDbSidebar::at(dir.path().to_path_buf());
+        store.write_keys(&live, &live, Some(&target)).unwrap();
+        let mut db = open_db(dir.path()).unwrap();
+        let owner = flag_text(&mut db, "ccd-sync-owner");
+        assert_eq!(owner.as_deref(), Some("acc-1"));
+        assert_eq!(flag_text(&mut db, "ccd-sync-org").as_deref(), Some("org-1"));
+        let pending = flag_text(&mut db, "ccd-sync-pending:ccd/dframe-store");
+        assert_eq!(pending.as_deref(), Some("1"));
+        assert_eq!(flag_text(&mut db, PENDING_BASE), None);
+        let stored = load_keys(&mut db).unwrap();
+        assert_ne!(stored.dframe_store["timestamp"], json!(1));
+    }
+
+    #[test]
+    fn a_write_without_a_target_leaves_the_flags_alone() {
+        let dir = tempfile::tempdir().unwrap();
+        let live = seeded(dir.path(), json!({"state": {}}));
+        let store = LevelDbSidebar::at(dir.path().to_path_buf());
+        store.write_keys(&live, &live, None).unwrap();
+        let mut db = open_db(dir.path()).unwrap();
+        assert_eq!(flag_text(&mut db, "ccd-sync-owner"), None);
+        assert_eq!(flag_text(&mut db, PENDING_BASE).as_deref(), Some("old"));
     }
 
     #[test]

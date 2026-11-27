@@ -164,6 +164,9 @@ pub struct Planned {
     pub kinds: Vec<StepKind>,
     /// The folder changes and the keys after them.
     pub folders: FolderPlan,
+    /// The scope Desktop opens on after a one-way copy; its sync flags go with the sidebar
+    /// write. None for a merge, which has no single target.
+    pub target: Option<Scope>,
 }
 
 impl Planned {
@@ -325,6 +328,7 @@ pub fn plan(env: &Env, scan: Scan) -> Result<Planned, String> {
         catalog,
         kinds,
         folders,
+        target: None,
     })
 }
 
@@ -590,6 +594,7 @@ fn write_folders(run: &mut Run, planned: &Planned) -> Result<(), String> {
     let written = env.sidebar.write(
         &planned.folders.keys.to_value(),
         &planned.scan.keys.to_value(),
+        planned.target.as_ref(),
     );
     let (state, note) = match &written {
         Ok(()) => (StepState::Done, None),
