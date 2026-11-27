@@ -294,7 +294,7 @@ async fn a_switch_with_handover_asks_the_fake_lead_in_the_temp_home_and_goes_on_
     })
     .await;
     if !ended(&waiting) {
-        let cut = Request::new("POST", "/api/accounts/switch/anyway");
+        let cut = Request::new("POST", "/api/accounts/switch/anyway").json(&json!({}));
         assert_eq!(r.t.send(r.t.page(cut)).await.status, 200);
     }
     let doc = wait_end(&r).await;
