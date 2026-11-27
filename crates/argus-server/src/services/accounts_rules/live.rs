@@ -55,6 +55,12 @@ fn cycle_view(cycle: Option<&Cycle>, active: Option<&View>) -> CycleView {
     }
 }
 
+/// Whether a running or ready cycle belongs to an account Claude no longer runs as.
+fn cycle_is_stale(cycle: &Cycle, active: Option<&str>) -> bool {
+    let live = cycle.phase.is_open() || cycle.phase == CyclePhase::Ready;
+    live && active.is_some_and(|key| key != cycle.account)
+}
+
 impl Live {
     pub(super) fn new(svc: &Arc<Services>, accounts: &Arc<AccountsService>) -> Self {
         Live {
@@ -161,6 +167,24 @@ impl World for Live {
             .blocking(|me| {
                 if let Some(desk) = me.accounts.handovers() {
                     desk.confirm_idle_sweep(&me.accounts);
+                }
+            })
+            .await;
+    }
+
+    async fn close_stale_cycle(&self) {
+        let _ = self
+            .blocking(|me| {
+                let Some(desk) = me.accounts.handovers() else {
+                    return;
+                };
+                let active = active_key(&me.accounts.config());
+                let stale = desk
+                    .desk()
+                    .cycle()
+                    .is_some_and(|c| cycle_is_stale(&c, active.as_deref()));
+                if stale && let Err(e) = desk.desk().cancel() {
+                    me.warn("stale handover cycle not cancelled", &e.to_string());
                 }
             })
             .await;
@@ -310,7 +334,7 @@ mod tests {
     use argus_accounts::rules::{CycleView, View};
     use argus_accounts::types::{HandoverMode, Rules};
 
-    use super::cycle_view;
+    use super::{cycle_is_stale, cycle_view};
 
     fn view(percent: f64) -> View {
         View {
@@ -362,5 +386,17 @@ mod tests {
     fn a_spent_cycle_is_never_ready() {
         let done = cycle(CycleMode::Auto, CyclePhase::Done);
         assert_eq!(cycle_view(Some(&done), Some(&view(99.0))), CycleView::None);
+    }
+
+    #[test]
+    fn a_cycle_of_another_account_is_stale_until_it_is_spent() {
+        let ready = cycle(CycleMode::Now, CyclePhase::Ready);
+        assert!(cycle_is_stale(&ready, Some("first")));
+        assert!(!cycle_is_stale(&ready, Some("second")));
+        assert!(!cycle_is_stale(&ready, None));
+        let asked = cycle(CycleMode::Auto, CyclePhase::Asked);
+        assert!(cycle_is_stale(&asked, Some("first")));
+        let done = cycle(CycleMode::Now, CyclePhase::Done);
+        assert!(!cycle_is_stale(&done, Some("first")));
     }
 }

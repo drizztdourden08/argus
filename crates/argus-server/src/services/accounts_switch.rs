@@ -405,6 +405,7 @@ impl Prepared {
         let (svc2, accounts2) = (Arc::clone(&svc), Arc::clone(&accounts));
         let _ = tokio::task::spawn_blocking(move || publish_logins(&svc2, &accounts2)).await;
         let done = result?;
+        accounts.spend_cycle();
         if done == Done::Switched {
             let _ =
                 tokio::task::spawn_blocking(move || check_sidebars(&svc, &accounts, &ends, &id))
