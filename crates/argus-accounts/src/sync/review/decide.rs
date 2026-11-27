@@ -106,6 +106,7 @@ pub fn plan_review(
         catalog,
         kinds,
         folders,
+        target: None,
     })
 }
 

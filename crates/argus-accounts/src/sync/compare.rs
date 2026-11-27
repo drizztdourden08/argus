@@ -595,6 +595,7 @@ mod tests {
                     encodings: [1, 1, 1],
                 },
             },
+            target: None,
         }
     }
 

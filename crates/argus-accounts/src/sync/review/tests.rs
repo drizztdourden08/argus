@@ -21,6 +21,7 @@ use crate::sidebar::store::CHANGED;
 use crate::sidebar::{FolderStep, SidebarKeys, chat_folder};
 use crate::sync::backup;
 use crate::sync::job::{Env, Planned, Summary, scan, scan_and_plan};
+use crate::sync::onto::{Route, scan_and_plan_onto};
 use crate::sync::steps::{StepKind, StepSink, SyncStep};
 use crate::types::Scope;
 
@@ -43,7 +44,12 @@ impl SidebarStore for FakeSidebar {
         Ok(self.0.lock().unwrap().clone())
     }
 
-    fn write(&self, keys: &Value, scanned: &Value) -> Result<(), String> {
+    fn write(
+        &self,
+        keys: &Value,
+        scanned: &Value,
+        _target: Option<&Scope>,
+    ) -> Result<(), String> {
         let mut live = self.0.lock().unwrap();
         if *live != *scanned {
             return Err(CHANGED.to_owned());
@@ -737,4 +743,16 @@ fn delete_chat_changes_are_planned_as_deletes() {
         .collect();
     assert_eq!(deletes, [&h(), &cross()]);
     assert!(planned.kinds.contains(&StepKind::DeleteChat));
+}
+
+#[test]
+fn a_copy_passes_its_target_to_the_sidebar_write_and_a_merge_passes_none() {
+    let world = World::new();
+    let route = Route {
+        source: h(),
+        target: s(),
+    };
+    let onto = world.with_env(|env| scan_and_plan_onto(env, &route).unwrap());
+    assert_eq!(onto.target, Some(s()));
+    assert_eq!(world.auto().target, None);
 }

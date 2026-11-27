@@ -68,7 +68,8 @@ pub trait SidebarStore: Send + Sync {
     fn read(&self) -> Result<Value, String>;
     /// Writes the three keys together; the Desktop app must be closed. `scanned` is the value
     /// the plan was made from; the write is refused when the live keys no longer equal it.
-    fn write(&self, keys: &Value, scanned: &Value) -> Result<(), String>;
+    /// `target` is the account Desktop opens on next: its sync flags go in the same batch.
+    fn write(&self, keys: &Value, scanned: &Value, target: Option<&Scope>) -> Result<(), String>;
 }
 
 /// What a cancelled wait for the quit answers.

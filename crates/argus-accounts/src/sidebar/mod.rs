@@ -3,6 +3,7 @@
 //! folders and memberships each account scope is missing.
 
 pub mod edit;
+pub mod flags;
 pub mod folders;
 pub mod onto;
 pub mod store;

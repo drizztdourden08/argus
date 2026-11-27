@@ -117,6 +117,12 @@ differences by kind every 10 minutes and after a poll. A dry run (`POST /api/acc
 `dryRun` true, the default) gives the plan only. Each step is a doc in `SyncSteps` and the `run`
 doc shows the phase, so the tab follows the run live.
 
+A one-way copy (the switch uses it) also writes the target account's sync flags in the same batch as
+the three sidebar keys: `ccd-sync-owner` and `ccd-sync-org` name the target, `ccd-sync-pending:ccd/dframe-store`
+is `1` and `ccd-sync-pending-base:ccd/dframe-store` is deleted. Without them Desktop drops every
+pending flag when the owner is another account and pulls the server row about a second after it
+starts, overwriting the written sidebar. A merge has no single target and writes no flags.
+
 ### Backups and undo
 
 Before it writes, a run copies every file it will overwrite and the whole LevelDB folder (without
