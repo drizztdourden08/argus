@@ -313,6 +313,15 @@ impl Desk {
         Ok(h)
     }
 
+    /// Closes a ready cycle once a switch was made from it. Returns whether it was ready.
+    ///
+    /// # Errors
+    /// No cycle, or the store refused.
+    pub fn spend(&self) -> Result<bool, DeskError> {
+        let (_, ready) = self.change(|c| Ok(c.spend()))?;
+        Ok(ready)
+    }
+
     /// Calls the cycle off. Returns whether it was still running.
     ///
     /// # Errors
@@ -563,6 +572,19 @@ mod tests {
         assert_eq!(reply.event.map(|e| e.cycle), Some("SW-1".into()));
         assert_eq!(world.notices.lock().unwrap().clone(), ["H-1"]);
         assert_eq!(desk.cycle().map(|c| c.phase), Some(CyclePhase::Ready));
+    }
+
+    #[test]
+    fn a_spent_cycle_stays_closed_after_a_restart() {
+        let (world, desk) = desk(&["rotp"]);
+        desk.start(request(CycleMode::Now), &EstimateDefaults::default())
+            .unwrap();
+        desk.cut_off_rest(Some(96.0)).unwrap();
+        assert_eq!(desk.cycle().map(|c| c.phase), Some(CyclePhase::Ready));
+        assert!(desk.spend().unwrap());
+        let restarted = Desk::new(world.clone(), world.clone(), world.clone()).unwrap();
+        assert_eq!(restarted.cycle().map(|c| c.phase), Some(CyclePhase::Done));
+        assert!(!restarted.spend().unwrap());
     }
 
     #[test]

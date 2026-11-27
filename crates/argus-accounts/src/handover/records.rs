@@ -31,7 +31,8 @@ pub enum CyclePhase {
     Asked,
     /// Every asked lead is ready or was cut off: the countdown may start.
     Ready,
-    /// Every handover is resumed or not resumed.
+    /// A switch was made from the cycle, or every handover is resumed or not resumed. A done
+    /// cycle never counts as ready again.
     Done,
     /// The owner or a rule called the cycle off before the switch.
     Cancelled,

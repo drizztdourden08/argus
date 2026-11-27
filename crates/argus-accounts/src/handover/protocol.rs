@@ -555,6 +555,16 @@ impl Cycle {
         Ok(&self.leads[at])
     }
 
+    /// A switch is made from a ready cycle: it closes, so no restart can use it a second time.
+    /// Returns whether it was ready.
+    pub fn spend(&mut self) -> bool {
+        let ready = self.phase == CyclePhase::Ready;
+        if ready {
+            self.phase = CyclePhase::Done;
+        }
+        ready
+    }
+
     /// Calls the cycle off before the switch. Returns whether it was still running.
     pub fn cancel(&mut self) -> bool {
         let running = self.phase.is_open() || self.phase == CyclePhase::Ready;
@@ -972,6 +982,16 @@ mod tests {
         assert_eq!(ready_events(&effects), 1);
         let again = c.confirm_idle(("rotp", "lead"), "idle.md", at).unwrap_err();
         assert_eq!(again.status(), 409);
+    }
+
+    #[test]
+    fn spend_closes_a_ready_cycle_once() {
+        let (mut c, _) = cycle(CycleMode::Now, &["rotp"]);
+        assert!(!c.spend());
+        c.cut_off_rest(None);
+        assert!(c.spend());
+        assert_eq!(c.phase, CyclePhase::Done);
+        assert!(!c.spend());
     }
 
     #[test]
