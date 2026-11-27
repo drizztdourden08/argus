@@ -8,7 +8,6 @@
 //! and marks the leads that never reported as not resumed so the cycle ends in its final state.
 //! [`cleanup_pending`] removes a finished task, and the switch calls it while Claude is closed.
 
-use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -68,13 +67,6 @@ fn verdict(pending: &Pending, ran: bool, reported: bool, now: i64) -> Verdict {
         (None, true) => Verdict::Ran,
         _ => Verdict::Wait,
     }
-}
-
-fn skill_root() -> PathBuf {
-    let home = std::env::var("USERPROFILE")
-        .or_else(|_| std::env::var("HOME"))
-        .unwrap_or_default();
-    PathBuf::from(home).join(".claude").join("scheduled-tasks")
 }
 
 /// The Desktop chat id (`local_<uuid>`) of a thread: the tail of its link, else its session id.
@@ -165,7 +157,8 @@ pub fn schedule_for_cycle(svc: &Services, target: &Scope) -> Result<Option<Strin
         notify_session_id: overlord_chat(svc),
         prompt: build_prompt(&leads, svc.port()),
     };
-    write_task(&app, target, &task, &skill_root())?;
+    let skills = accounts.user_claude().join("scheduled-tasks");
+    write_task(&app, target, &task, &skills)?;
     let pending = Pending {
         id: task.id.clone(),
         scope: target.clone(),
@@ -235,7 +228,8 @@ pub fn cleanup_pending(svc: &Services, scope: &Scope) -> Result<(), String> {
         .ok_or("the accounts service is not running")?;
     let app = find_app_data(accounts.config().app_data.as_deref())
         .ok_or("the Claude Desktop data folder was not found")?;
-    remove_task(&app, &pending.scope, &pending.id, &skill_root())?;
+    let skills = accounts.user_claude().join("scheduled-tasks");
+    remove_task(&app, &pending.scope, &pending.id, &skills)?;
     save_pending(svc, None)
 }
 

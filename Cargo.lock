@@ -194,6 +194,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "argus-fakeclaude"
+version = "0.2.0"
+dependencies = [
+ "argus-accounts",
+ "rusty-leveldb",
+ "serde_json",
+]
+
+[[package]]
 name = "argus-launchers"
 version = "0.2.0"
 dependencies = [
@@ -344,6 +353,7 @@ dependencies = [
  "getrandom 0.3.4",
  "http-body-util",
  "rust-embed",
+ "rusty-leveldb",
  "serde",
  "serde_json",
  "sha1",

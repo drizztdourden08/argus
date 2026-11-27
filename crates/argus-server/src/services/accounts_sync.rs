@@ -92,13 +92,6 @@ pub struct Undone {
     pub report: UndoReport,
 }
 
-fn user_projects() -> PathBuf {
-    let home = std::env::var("USERPROFILE")
-        .or_else(|_| std::env::var("HOME"))
-        .unwrap_or_default();
-    Path::new(&home).join(".claude").join("projects")
-}
-
 impl AccountsService {
     /// Whether a sync is running now.
     #[must_use]
@@ -132,7 +125,7 @@ impl AccountsService {
         let app = find_app_data(config.app_data.as_deref())
             .ok_or_else(|| "the Claude Desktop data folder was not found".to_owned())?;
         let catalog = FsCatalog::for_app(&app);
-        let transcripts = FsTranscripts::scan(&user_projects())?;
+        let transcripts = FsTranscripts::scan(&self.user_claude().join("projects"))?;
         let sidebar = LevelDbSidebar::new(&app);
         let running = || lock_running(&app);
         let env = Env {

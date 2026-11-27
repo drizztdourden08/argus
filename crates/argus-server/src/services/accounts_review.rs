@@ -9,7 +9,6 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use argus_accounts::desktop::ClaudeDesktop;
 use argus_accounts::desktop::app::wait_until;
 use argus_accounts::find_app_data;
 use argus_accounts::sync::review::{Cleanup, Request, Review, build_review, cleanup, run_review};
@@ -130,7 +129,7 @@ impl ReviewRun {
         update(json!({}));
         let result = match find_app_data(accounts.config().app_data.as_deref()) {
             Some(app) => {
-                let desktop = ClaudeDesktop::new(&app);
+                let desktop = accounts.desktop(&app);
                 let mut note = |state: &str| match state {
                     "waiting_for_quit" => update(
                         json!({ "desktop": state, "phase": "waiting_for_quit", "detail": QUIT_BY_HAND }),

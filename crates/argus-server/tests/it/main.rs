@@ -17,6 +17,7 @@ mod posting;
 mod pr_rig;
 #[path = "runs/rig.rs"]
 mod runs_rig;
+mod sim_home;
 mod toasts;
 #[path = "support/wait.rs"]
 mod wait;
@@ -26,6 +27,7 @@ mod worktrees_rig;
 
 mod accounts_override;
 mod accounts_shadow;
+mod accounts_sim;
 mod activity;
 mod agents;
 mod alias;
