@@ -216,10 +216,12 @@ async fn switch_to(r: &Rig, to: &str) -> Value {
     wait_end(r).await
 }
 
+/// A failed switch writes its steps first and its error just after, so a failed doc ends with
+/// its error.
 async fn wait_end(r: &Rig) -> Value {
     let t = &r.t;
     until("the switch to end", || async move {
-        switch_doc(t).filter(ended)
+        switch_doc(t).filter(|d| ended(d) && (d["phase"] != "failed" || !d["error"].is_null()))
     })
     .await
 }
