@@ -169,10 +169,7 @@ fn lead_title(h: &Handover, name_of: &dyn Fn(&str) -> Option<String>) -> String 
 }
 
 /// The leads the cycle found for the handover, as the `threads` of the doc.
-pub(crate) fn threads_of(
-    cycle: &Cycle,
-    name_of: &dyn Fn(&str) -> Option<String>,
-) -> Vec<Value> {
+pub(crate) fn threads_of(cycle: &Cycle, name_of: &dyn Fn(&str) -> Option<String>) -> Vec<Value> {
     cycle
         .leads
         .iter()

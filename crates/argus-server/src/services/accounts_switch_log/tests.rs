@@ -299,7 +299,10 @@ fn a_resume_goes_to_the_resume_lines() {
 
 #[test]
 fn a_lead_row_is_titled_with_its_project_name_or_the_thread() {
-    let found = cycle(CyclePhase::Asked, vec![handover("lead", HandoverState::Asked)]);
+    let found = cycle(
+        CyclePhase::Asked,
+        vec![handover("lead", HandoverState::Asked)],
+    );
     let named = threads_of(&found, &|_| Some("Argus".to_owned()));
     assert_eq!(named[0]["title"], "Argus lead");
     let unnamed = threads_of(&found, &|_| None);
