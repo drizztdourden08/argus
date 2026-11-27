@@ -31,6 +31,21 @@ impl AccountsDocs {
         self.apply(&[DocChange::set(coll, id.to_owned(), data)])
     }
 
+    /// One doc of `coll`; `None` when there is none or the store cannot read it.
+    #[must_use]
+    pub fn get(&self, coll: Coll, id: &str) -> Option<Value> {
+        let row = self.db.docs().get(PORTFOLIO, coll, id).ok()??;
+        Some(row.data)
+    }
+
+    /// Removes one doc of `coll`.
+    ///
+    /// # Errors
+    /// When the store refuses the write.
+    pub fn delete(&self, coll: Coll, id: &str) -> Result<(), String> {
+        self.apply(&[DocChange::delete(coll, id.to_owned())])
+    }
+
     /// Sets the `Accounts` doc of every account, with no usage read yet.
     ///
     /// # Errors

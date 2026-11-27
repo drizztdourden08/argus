@@ -120,6 +120,21 @@ impl LogState {
         Some(self.shaped(doc, now))
     }
 
+    /// Takes up a stored `switch` doc after a restart: its log and leads come back, and the
+    /// raw doc a writer would give is built from it.
+    pub(crate) fn adopt(&mut self, stored: &Value) -> Value {
+        self.restart();
+        let list = |key: &str| stored[key].as_array().cloned().unwrap_or_default();
+        self.entries = list("steps");
+        self.threads = list("threads");
+        let mut raw = stored.clone();
+        if let Some(object) = raw.as_object_mut() {
+            object.insert("phase".to_owned(), stored["desktopPhase"].clone());
+            object.insert("steps".to_owned(), stored["desktopSteps"].clone());
+        }
+        raw
+    }
+
     /// Ends the switch `id` in `phase` (with `error`) after the steps `lines`, when its doc is
     /// still the last one; `None` when another doc came since.
     pub(crate) fn finish(
@@ -162,6 +177,20 @@ impl AccountsService {
         log.begin(&doc);
         log.add(now, lines);
         let doc = log.stamp(doc, now);
+        self.docs.put(Coll::AccountsState, SWITCH_DOC, doc)
+    }
+
+    /// Takes up the stored `switch` doc of a switch that was verifying when Argus stopped, so
+    /// the check that starts again can end it. Blocking.
+    ///
+    /// # Errors
+    /// When the store refuses the write.
+    pub(crate) fn resume_switch(&self, stored: &Value, lines: &[Line]) -> Result<(), String> {
+        let now = now_ms();
+        let mut log = self.switch_log.held();
+        let raw = log.adopt(stored);
+        log.add(now, lines);
+        let doc = log.stamp(raw, now);
         self.docs.put(Coll::AccountsState, SWITCH_DOC, doc)
     }
 

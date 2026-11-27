@@ -24,8 +24,9 @@ use tokio::sync::broadcast::Receiver;
 
 use super::AccountsService;
 use super::accounts_handover::{Handovers, use_now};
+use super::accounts_switch_check::check_sidebars;
 use super::accounts_switch_log::{
-    Line, LineState, Stage, sidebar_check_line, stage_of, step_lines, sync_info, sync_note,
+    Line, LineState, Stage, stage_of, step_lines, sync_info, sync_note,
 };
 use crate::Services;
 
@@ -40,7 +41,7 @@ static VERSION: Mutex<Option<String>> = Mutex::new(None);
 /// The version the owner was last told about, so the notice goes out once per version.
 static TOLD_VERSION: Mutex<Option<String>> = Mutex::new(None);
 
-fn cached_version() -> Option<String> {
+pub(super) fn cached_version() -> Option<String> {
     VERSION
         .lock()
         .unwrap_or_else(PoisonError::into_inner)
@@ -55,6 +56,12 @@ fn refresh_version(accounts: &AccountsService, app: &Path) -> Option<String> {
         .unwrap_or_else(PoisonError::into_inner)
         .clone_from(&found);
     found
+}
+
+/// Reads the Claude version again, as it is after Claude started; keeps and answers it. Blocking.
+pub(super) fn reread_version(accounts: &AccountsService) -> Option<String> {
+    let app = find_app_data(accounts.config().app_data.as_deref())?;
+    refresh_version(accounts, &app)
 }
 
 /// The Claude version, read once and kept; a switch and start-up read it again. Blocking.
@@ -209,7 +216,7 @@ pub struct Prepared {
     origin: Origin,
     handover: bool,
     id: String,
-    /// The warning of an automatic switch on a Claude version no switch confirmed yet.
+    /// The warning of a switch on a Claude version no switch confirmed yet.
     warning: Option<String>,
     control: Control,
     _slot: Slot,
@@ -258,13 +265,10 @@ pub fn prepare(
         return Err(format!("{} cannot be switched to", target.label));
     }
     let vault = FsVault::new(&app, &logins_root(svc));
-    let mut warning = None;
-    if origin == Origin::Rule {
-        if vault.saved_at(&target).is_none() {
-            return Err(format!("{} has no saved login yet", target.label));
-        }
-        warning = version_warning(svc, &config);
+    if origin == Origin::Rule && vault.saved_at(&target).is_none() {
+        return Err(format!("{} has no saved login yet", target.label));
     }
+    let warning = version_warning(svc, &config, origin);
     let leftover = match repair(
         &journal_of(svc),
         &*accounts.desktop(&app),
@@ -299,7 +303,7 @@ pub fn prepare(
     })
 }
 
-/// The warning step of an automatic switch on a Claude version that no switch confirmed yet;
+/// The warning step of a switch on a Claude version that no switch confirmed yet;
 /// `None` when the version is the confirmed one.
 fn unverified_text(current: Option<&str>, verified: Option<&str>) -> Option<String> {
     match current {
@@ -314,19 +318,30 @@ fn unverified_text(current: Option<&str>, verified: Option<&str>) -> Option<Stri
     }
 }
 
-/// An automatic switch never stops on a new Claude version: it goes on with a warning step, and
-/// the owner is told once per version.
-fn version_warning(svc: &Services, config: &argus_accounts::AccountsConfig) -> Option<String> {
+/// No switch stops on a new Claude version: it goes on with a warning step. An automatic switch
+/// also tells the owner, once per version; the owner who switches by hand sees the step.
+fn version_warning(
+    svc: &Services,
+    config: &argus_accounts::AccountsConfig,
+    origin: Origin,
+) -> Option<String> {
     let current = cached_version();
     let text = unverified_text(current.as_deref(), config.verified_app_version.as_deref())?;
-    let seen = current.unwrap_or_default();
+    if origin == Origin::Rule {
+        tell_once(svc, current.unwrap_or_default(), &text);
+    }
+    Some(text)
+}
+
+/// Pings the owner about the Claude version `seen`, unless it was told about that one already.
+fn tell_once(svc: &Services, seen: String, text: &str) {
     let mut told = TOLD_VERSION.lock().unwrap_or_else(PoisonError::into_inner);
     if told.as_deref() != Some(seen.as_str()) {
         *told = Some(seen);
         if let Some(notify) = &svc.notify {
             notify.send(PingRequest {
                 title: Some("Claude was updated".to_owned()),
-                text: text.clone(),
+                text: text.to_owned(),
                 level: Level::Ping,
                 project: None,
                 thread: None,
@@ -335,7 +350,6 @@ fn version_warning(svc: &Services, config: &argus_accounts::AccountsConfig) -> O
             });
         }
     }
-    Some(text)
 }
 
 /// The `switch` doc as it is shown now.
@@ -551,63 +565,6 @@ fn failure_line(done: &Done, steps: &[Step], why: &str) -> Line {
     )
 }
 
-/// After a confirmed switch: checks that the sync held once Claude started again, and ends the
-/// switch `id` (verifying until then) as done or failed. A check that passes confirms the
-/// installed Claude version; one that fails is a failed step, the error of the doc, an urgent
-/// toast and a log line, never silent. Blocking.
-fn check_sidebars(svc: &Services, accounts: &AccountsService, ends: &(Account, Account), id: &str) {
-    let (from, to) = ends;
-    std::thread::sleep(accounts.sidebar_settle());
-    let left = accounts.copy_left(from, to);
-    let line = sidebar_check_line(&left, &to.label);
-    if left == Ok(0) {
-        accounts.finish_switch(id, ("done", None), &[line]);
-        verify_version(svc, accounts);
-        return;
-    }
-    let detail = match &left {
-        Ok(n) => format!("{n} sidebar changes of the copy are missing again after Claude started"),
-        Err(why) => why.clone(),
-    };
-    let error = format!("the switch worked but the sidebar check failed: {detail}");
-    accounts.finish_switch(
-        id,
-        ("failed", Some(error.as_str())),
-        std::slice::from_ref(&line),
-    );
-    svc.log
-        .warn("accounts sidebar check failed", json!({ "error": detail }));
-    if let Some(notify) = &svc.notify {
-        notify.send(PingRequest {
-            title: Some("The sidebars are not the same after the switch".to_owned()),
-            text: line.text,
-            level: Level::Urgent,
-            project: None,
-            thread: None,
-            by: By::Auto,
-            url: Some(format!("http://127.0.0.1:{}/?tab=accounts", svc.port())),
-        });
-    }
-}
-
-/// A switch whose account and sidebars checked out: the installed Claude version is now the
-/// verified one.
-fn verify_version(svc: &Services, accounts: &AccountsService) {
-    let Some(version) = cached_version() else {
-        return;
-    };
-    if accounts.config().verified_app_version.as_deref() == Some(version.as_str()) {
-        return;
-    }
-    let saved = accounts
-        .update(&json!({ "verifiedAppVersion": version }))
-        .and_then(|config| super::accounts::save(svc, &config).map_err(|e| e.to_string()));
-    if let Err(e) = saved {
-        svc.log
-            .error("accounts verified version not saved", json!({ "error": e }));
-    }
-}
-
 /// The result a [`Done`] makes, with the reason in plain words.
 fn outcome_of(done: &Done) -> Result<(), String> {
     match done {
@@ -650,11 +607,30 @@ fn with_error(mut doc: Value, error: Option<&str>) -> Value {
 /// The stages of one switch that need the server.
 struct ServerStages<'a> {
     run: &'a Prepared,
+    backup: Backup,
+}
+
+/// The backup folder the sync of this switch wrote, kept so a rollback can put it back.
+#[derive(Default)]
+struct Backup(Mutex<Option<String>>);
+
+impl Backup {
+    fn keep(&self, dir: Option<&String>) {
+        *self.0.lock().unwrap_or_else(PoisonError::into_inner) = dir.cloned();
+    }
+
+    /// The folder, once: a second undo has nothing to put back.
+    fn take(&self) -> Option<String> {
+        self.0.lock().unwrap_or_else(PoisonError::into_inner).take()
+    }
 }
 
 impl<'a> ServerStages<'a> {
     fn new(run: &'a Prepared) -> Self {
-        ServerStages { run }
+        ServerStages {
+            run,
+            backup: Backup::default(),
+        }
     }
 
     fn wait_ready(
@@ -751,6 +727,7 @@ impl Stages for ServerStages<'_> {
                 return Err(error);
             }
         };
+        self.backup.keep(summary.backup_dir.as_ref());
         if !summary.verified {
             let error = format!(
                 "the copy wrote but its check found changes left: {}",
@@ -782,6 +759,18 @@ impl Stages for ServerStages<'_> {
 
     fn skip_wait(&self) -> bool {
         self.run.control.skip_wait.load(Ordering::SeqCst)
+    }
+
+    fn undo(&self) {
+        let Some(dir) = self.backup.take() else {
+            return;
+        };
+        if let Err(e) = self.run.accounts.undo_sync(Some(&dir), false) {
+            self.run.svc.log.warn(
+                "accounts sync not undone by the rollback",
+                json!({ "error": e, "backup": dir }),
+            );
+        }
     }
 
     fn closed(&self) {
@@ -926,7 +915,37 @@ fn put_login(
 mod tests {
     use argus_accounts::desktop::{Done, Step, StepStatus};
 
-    use super::{Control, Origin, outcome_of, switch_doc, with_error};
+    use super::{Backup, Control, Origin, outcome_of, switch_doc, unverified_text, with_error};
+
+    #[test]
+    fn the_confirmed_version_has_no_warning() {
+        assert_eq!(unverified_text(Some("1.2"), Some("1.2")), None);
+    }
+
+    #[test]
+    fn a_new_or_unreadable_version_has_a_warning() {
+        let new = unverified_text(Some("1.3"), Some("1.2")).unwrap_or_default();
+        assert!(new.contains("Claude 1.3"), "{new}");
+        let none = unverified_text(None, Some("1.2")).unwrap_or_default();
+        assert!(none.contains("could not be read"), "{none}");
+    }
+
+    #[test]
+    fn a_rollback_gets_the_backup_of_the_sync_once() {
+        let backup = Backup::default();
+        assert_eq!(backup.take(), None);
+        backup.keep(Some(&"b-1".to_owned()));
+        assert_eq!(backup.take(), Some("b-1".to_owned()));
+        assert_eq!(backup.take(), None);
+    }
+
+    #[test]
+    fn a_sync_that_wrote_nothing_leaves_nothing_to_undo() {
+        let backup = Backup::default();
+        backup.keep(Some(&"b-1".to_owned()));
+        backup.keep(None);
+        assert_eq!(backup.take(), None);
+    }
 
     #[test]
     fn cancel_works_until_the_last_call() {

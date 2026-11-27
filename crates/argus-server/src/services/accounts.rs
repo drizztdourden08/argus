@@ -487,11 +487,18 @@ pub(crate) fn start(svc: &Arc<Services>) {
     let polling = svc.tasks.runs(Timer::Accounts);
     let task = tokio::spawn(async move {
         let loader = Arc::clone(&accounts);
-        if tokio::task::spawn_blocking(move || load(&owned, &loader))
+        let loading = Arc::clone(&owned);
+        if tokio::task::spawn_blocking(move || load(&loading, &loader))
             .await
-            .is_ok()
-            && polling
+            .is_err()
         {
+            return;
+        }
+        let resumer = Arc::clone(&accounts);
+        drop(tokio::task::spawn_blocking(move || {
+            super::accounts_switch_check::resume_check(&owned, &resumer);
+        }));
+        if polling {
             poll_loop(&accounts).await;
         }
     });
