@@ -5,10 +5,12 @@
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, Mutex, OnceLock, PoisonError, RwLock};
+use std::time::Duration;
 
+use argus_accounts::desktop::ClaudeDesktop;
 use argus_accounts::{
     Account, AccountsConfig, AuthProbe, BurnHistory, ClaudeAuthProbe, CliCredentials, Credentials,
-    HttpUsage, Poll, PollResult, ReadOnlyCredentials, Schedule, Usage, UsageSource, discover,
+    DesktopApp, HttpUsage, Poll, PollResult, ReadOnlyCredentials, Schedule, Usage, UsageSource, discover,
     find_app_data, find_cli_exe, poll_all, refresh_identities,
 };
 use argus_core::ConfigError;
@@ -37,6 +39,12 @@ fn login_iso(value: &Value) -> Option<String> {
     }
 }
 
+/// How long Claude may rewrite its storage after a switch before the sidebar check reads it.
+pub(crate) const SIDEBAR_SETTLE: Duration = Duration::from_secs(20);
+
+/// Makes the desktop app that lives in an app data folder.
+pub type DesktopFactory = Arc<dyn Fn(&Path) -> Arc<dyn DesktopApp> + Send + Sync>;
+
 /// How the accounts service starts; the fields after `enabled` are seams for tests.
 #[derive(Clone)]
 pub struct AccountsOptions {
@@ -50,6 +58,10 @@ pub struct AccountsOptions {
     pub usage: Option<Arc<dyn UsageSource>>,
     /// Other CLI logins.
     pub credentials: Option<Arc<dyn Credentials>>,
+    /// Another desktop app than Claude Desktop, made per app data folder.
+    pub desktop: Option<DesktopFactory>,
+    /// Another wait before the sidebar check than [`SIDEBAR_SETTLE`].
+    pub sidebar_settle: Option<Duration>,
 }
 
 impl Default for AccountsOptions {
@@ -60,6 +72,8 @@ impl Default for AccountsOptions {
             probe: None,
             usage: None,
             credentials: None,
+            desktop: None,
+            sidebar_settle: None,
         }
     }
 }
@@ -83,6 +97,8 @@ pub struct AccountsService {
     pub(crate) rules: OnceLock<Arc<super::accounts_rules::RulesDesk>>,
     pub(crate) switch_log: super::accounts_switch_log::SwitchLog,
     pub(crate) refusals: super::accounts_limit::Refusals,
+    desktop: DesktopFactory,
+    sidebar_settle: Duration,
 }
 
 /// The outside world of the usage poll.
@@ -124,7 +140,31 @@ impl AccountsService {
             rules: OnceLock::new(),
             switch_log: super::accounts_switch_log::SwitchLog::default(),
             refusals: super::accounts_limit::Refusals::default(),
+            desktop: Arc::new(|app: &Path| -> Arc<dyn DesktopApp> {
+                Arc::new(ClaudeDesktop::new(app))
+            }),
+            sidebar_settle: SIDEBAR_SETTLE,
         }
+    }
+
+    /// The same service with the seams of `options` that name another desktop or wait.
+    #[must_use]
+    pub(crate) fn with_seams(mut self, options: &AccountsOptions) -> Self {
+        if let Some(desktop) = &options.desktop {
+            self.desktop = Arc::clone(desktop);
+        }
+        self.sidebar_settle = options.sidebar_settle.unwrap_or(self.sidebar_settle);
+        self
+    }
+
+    /// The desktop app of the app data folder `app`.
+    pub(crate) fn desktop(&self, app: &Path) -> Arc<dyn DesktopApp> {
+        (self.desktop)(app)
+    }
+
+    /// How long the sidebar check waits after a switch.
+    pub(crate) fn sidebar_settle(&self) -> Duration {
+        self.sidebar_settle
     }
 
     /// The last poll result of each account, by key.
@@ -366,8 +406,10 @@ pub(crate) fn build(svc: &Services, opts: &ServeOptions) -> Option<Arc<AccountsS
         log: Arc::clone(&svc.log),
         probe_login: live,
     };
-    (opts.accounts.enabled && config.enabled)
-        .then(|| Arc::new(AccountsService::new(config, probe, docs, ports)))
+    (opts.accounts.enabled && config.enabled).then(|| {
+        let service = AccountsService::new(config, probe, docs, ports);
+        Arc::new(service.with_seams(&opts.accounts))
+    })
 }
 
 /// The Desktop account that is logged in now, from `<app>/config.json`.

@@ -171,6 +171,16 @@ pub fn wait_until(limit: Duration, step: Duration, mut done: impl FnMut() -> boo
     }
 }
 
+/// Whether `<app>\config.json` was written after `since_ms` (epoch milliseconds).
+#[must_use]
+pub fn config_written_after(app: &Path, since_ms: i64) -> bool {
+    std::fs::metadata(app.join("config.json"))
+        .and_then(|meta| meta.modified())
+        .ok()
+        .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
+        .is_some_and(|age| i64::try_from(age.as_millis()).is_ok_and(|ms| ms > since_ms))
+}
+
 /// Whether a chat record looks like a turn is running. Two signals, either one counts: the
 /// record changed in the last 90 seconds (a running turn writes it all the time), or the latest
 /// user message is newer than the last turn edge and under 30 minutes old (a turn was started
@@ -332,11 +342,7 @@ impl DesktopApp for ClaudeDesktop {
     }
 
     fn config_touched_since(&self, since_ms: i64) -> bool {
-        std::fs::metadata(self.app.join("config.json"))
-            .and_then(|meta| meta.modified())
-            .ok()
-            .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
-            .is_some_and(|age| i64::try_from(age.as_millis()).is_ok_and(|ms| ms > since_ms))
+        config_written_after(&self.app, since_ms)
     }
 
     fn version(&self) -> Option<String> {

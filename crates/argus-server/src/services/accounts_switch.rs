@@ -10,8 +10,8 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, Instant};
 
 use argus_accounts::desktop::{
-    ClaudeDesktop, Done, FsVault, Journal, Plan, Repair, Stages, Step, StepStatus, Stop, Timing,
-    WAITING_PHASE, last_known_account, repair,
+    Done, FsVault, Journal, Plan, Repair, Stages, Step, StepStatus, Stop, Timing, WAITING_PHASE,
+    last_known_account, repair,
 };
 use argus_accounts::handover::{CycleEvent, CycleMode, StartRequest};
 use argus_accounts::{Account, DesktopApp, LoginVault, QUIT_BY_HAND, Scope, find_app_data};
@@ -48,8 +48,8 @@ fn cached_version() -> Option<String> {
 }
 
 /// Reads the installed Claude version and keeps it. Blocking (runs PowerShell).
-fn refresh_version(app: &Path) -> Option<String> {
-    let found = ClaudeDesktop::new(app).version();
+fn refresh_version(accounts: &AccountsService, app: &Path) -> Option<String> {
+    let found = accounts.desktop(app).version();
     VERSION
         .lock()
         .unwrap_or_else(PoisonError::into_inner)
@@ -61,7 +61,7 @@ fn refresh_version(app: &Path) -> Option<String> {
 pub fn app_version(accounts: &AccountsService) -> Option<String> {
     cached_version().or_else(|| {
         let app = find_app_data(accounts.config().app_data.as_deref())?;
-        refresh_version(&app)
+        refresh_version(accounts, &app)
     })
 }
 
@@ -267,7 +267,7 @@ pub fn prepare(
     }
     let leftover = match repair(
         &journal_of(svc),
-        &ClaudeDesktop::new(&app),
+        &accounts.desktop(&app),
         &vault,
         &config.accounts,
     )? {
@@ -373,7 +373,7 @@ pub async fn switch_to(
         if let Some(accounts) = svc.accounts.clone() {
             let _ = tokio::task::spawn_blocking(move || {
                 find_app_data(accounts.config().app_data.as_deref())
-                    .and_then(|app| refresh_version(&app))
+                    .and_then(|app| refresh_version(&accounts, &app))
             })
             .await;
         }
@@ -449,10 +449,10 @@ impl Prepared {
     }
 
     fn run_blocking(self) -> Result<Done, String> {
-        let desktop = ClaudeDesktop::new(&self.app);
+        let desktop = self.accounts.desktop(&self.app);
         let vault = FsVault::new(&self.app, &logins_root(&self.svc));
         let stages = ServerStages::new(&self);
-        refresh_version(&self.app);
+        refresh_version(&self.accounts, &self.app);
         self.accounts.note_switch(&self.opening_lines());
         let journal = journal_of(&self.svc);
         let plan = Plan {
@@ -550,16 +550,13 @@ fn failure_line(done: &Done, steps: &[Step], why: &str) -> Line {
     )
 }
 
-/// How long Claude may rewrite its storage after it started before the sidebar check reads it.
-const SIDEBAR_SETTLE: Duration = Duration::from_secs(20);
-
 /// After a confirmed switch: checks that the sync held once Claude started again, and ends the
 /// switch `id` (verifying until then) as done or failed. A check that passes confirms the
 /// installed Claude version; one that fails is a failed step, the error of the doc, an urgent
 /// toast and a log line, never silent. Blocking.
 fn check_sidebars(svc: &Services, accounts: &AccountsService, ends: &(Account, Account), id: &str) {
     let (from, to) = ends;
-    std::thread::sleep(SIDEBAR_SETTLE);
+    std::thread::sleep(accounts.sidebar_settle());
     let left = accounts.copy_left(from, to);
     let line = sidebar_check_line(&left, &to.label);
     if left == Ok(0) {
@@ -812,12 +809,12 @@ pub(crate) fn repair_interrupted(svc: &Services, accounts: &AccountsService) {
     let Some(app) = find_app_data(config.app_data.as_deref()) else {
         return;
     };
-    refresh_version(&app);
+    refresh_version(accounts, &app);
     let journal = journal_of(svc);
     let vault = FsVault::new(&app, &logins_root(svc));
     match repair(
         &journal,
-        &ClaudeDesktop::new(&app),
+        &accounts.desktop(&app),
         &vault,
         &config.accounts,
     ) {

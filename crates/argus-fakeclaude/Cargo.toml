@@ -1,0 +1,18 @@
+[package]
+name = "argus-fakeclaude"
+description = "A fake Claude Desktop that holds its lock, reconciles its sidebar like Claude and quits on a file."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+argus-accounts = { path = "../argus-accounts" }
+rusty-leveldb = "3.0.3"
+serde_json = { version = "1", features = ["preserve_order"] }
+
+[lints]
+workspace = true

@@ -49,6 +49,7 @@ argus-overlord = { path = "../argus-overlord", features = ["test-support"] }
 argus-testkit = { path = "../argus-testkit" }
 base64 = "0.22"
 filetime = "0.2"
+rusty-leveldb = "3.0.3"
 tempfile = "3"
 tokio = { version = "1", features = ["test-util"] }
 
