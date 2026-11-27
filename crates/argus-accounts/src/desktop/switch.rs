@@ -524,7 +524,9 @@ fn confirm(
             && wanted.is_some()
             && stages.active_account() == wanted
     };
-    if wait_until(timing.confirm, timing.poll, || shown() || stages.skip_wait()) {
+    if wait_until(timing.confirm, timing.poll, || {
+        shown() || stages.skip_wait()
+    }) {
         return Ok(if shown() {
             (format!("Claude shows {}", to.label), false)
         } else {
@@ -553,7 +555,9 @@ fn wait_for_sign_in(
     let wanted = plan.to.desktop_account.clone();
     let label = &plan.to.label;
     let signed = || wanted.is_some() && stages.active_account() == wanted;
-    if !wait_until(timing.sign_in, timing.poll, || signed() || stages.skip_wait()) {
+    if !wait_until(timing.sign_in, timing.poll, || {
+        signed() || stages.skip_wait()
+    }) {
         return (unsigned_note(app, label), true);
     }
     if signed() {

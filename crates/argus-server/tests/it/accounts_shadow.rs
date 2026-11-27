@@ -55,7 +55,12 @@ fn tweak(mode: ServeMode, calls: &Arc<AtomicUsize>) -> Tweak {
     })
 }
 
-pub(super) async fn start(shadow: bool, mode: ServeMode, dir: &Path, calls: &Arc<AtomicUsize>) -> TestServer {
+pub(super) async fn start(
+    shadow: bool,
+    mode: ServeMode,
+    dir: &Path,
+    calls: &Arc<AtomicUsize>,
+) -> TestServer {
     TestServer::start(TestOptions {
         shadow,
         config: setup(dir),

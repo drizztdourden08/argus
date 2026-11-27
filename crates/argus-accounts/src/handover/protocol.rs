@@ -246,7 +246,10 @@ pub fn start(
             .map(|h| opening_effect(h, WakeKind::Estimate))
             .collect()
     } else {
-        let notices = cycle.leads.iter().filter(|h| h.state == HandoverState::Ready);
+        let notices = cycle
+            .leads
+            .iter()
+            .filter(|h| h.state == HandoverState::Ready);
         let mut effects: Vec<Effect> = notices.map(ready_effect).collect();
         effects.extend(cycle.ask_all(spec.use_now, &spec.now));
         effects
@@ -930,8 +933,11 @@ mod tests {
     #[test]
     fn skipping_a_lead_without_a_file_cuts_it_off_and_the_last_skip_readies_the_cycle() {
         let (mut c, _) = cycle(CycleMode::Now, &["rotp", "brock"]);
-        c.skip_lead(("rotp", "lead"), Some("rotp.md"), (None, NOW)).unwrap();
-        let effects = c.skip_lead(("brock", "lead"), None, (Some(97.0), NOW)).unwrap();
+        c.skip_lead(("rotp", "lead"), Some("rotp.md"), (None, NOW))
+            .unwrap();
+        let effects = c
+            .skip_lead(("brock", "lead"), None, (Some(97.0), NOW))
+            .unwrap();
         let h = &c.leads[1];
         assert_eq!((h.state, h.via), (HandoverState::CutOff, Some(Via::Owner)));
         assert_eq!(h.file, None);

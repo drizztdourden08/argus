@@ -32,7 +32,10 @@ async fn a_step_that_cannot_be_skipped_or_is_not_under_way_is_a_conflict() {
 async fn an_unknown_or_missing_stage_is_a_bad_request() {
     let dir = tempfile::tempdir().expect("dir");
     let t = live(dir.path()).await;
-    assert_eq!(post(&t, SKIP_STEP, &json!({ "stage": "later" })).await.0, 400);
+    assert_eq!(
+        post(&t, SKIP_STEP, &json!({ "stage": "later" })).await.0,
+        400
+    );
     assert_eq!(post(&t, SKIP_STEP, &json!({})).await.0, 400);
 }
 
@@ -51,6 +54,8 @@ async fn only_the_owners_page_may_override() {
     let dir = tempfile::tempdir().expect("dir");
     let t = live(dir.path()).await;
     let body: Value = json!({ "stage": "countdown" });
-    let cli = t.send(t.bearer(Request::new("POST", SKIP_STEP).json(&body))).await;
+    let cli = t
+        .send(t.bearer(Request::new("POST", SKIP_STEP).json(&body)))
+        .await;
     assert_eq!(cli.status, 403);
 }

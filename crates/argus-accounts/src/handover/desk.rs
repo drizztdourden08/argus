@@ -299,7 +299,8 @@ impl Desk {
         use_now: Option<f64>,
     ) -> Result<Outcome, DeskError> {
         let now = self.now();
-        let (cycle, effects) = self.change(|c| Ok(c.confirm_idle(lead, file, (use_now, &now))?))?;
+        let (cycle, effects) =
+            self.change(|c| Ok(c.confirm_idle(lead, file, (use_now, &now))?))?;
         Ok(self.carry_out(cycle, effects, &EstimateDefaults::default()))
     }
 
@@ -612,7 +613,9 @@ mod tests {
         let (world, desk) = desk(&["rotp"]);
         desk.start(request(CycleMode::Now), &EstimateDefaults::default())
             .unwrap();
-        let out = desk.confirm_idle(("rotp", "lead"), "idle.md", None).unwrap();
+        let out = desk
+            .confirm_idle(("rotp", "lead"), "idle.md", None)
+            .unwrap();
         assert_eq!(out.cycle.leads[0].via, Some(Via::Idle));
         assert_eq!(world.notices.lock().unwrap().clone(), ["H-1"]);
         assert_eq!(world.saved.lock().unwrap().as_ref(), Some(&out.cycle));

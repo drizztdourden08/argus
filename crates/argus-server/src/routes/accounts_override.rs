@@ -116,8 +116,8 @@ async fn skip_thread(ctx: Ctx) -> Reply {
     let board = text(&body, "board")
         .ok_or_else(|| ApiError::bad_request("board is required"))?
         .to_owned();
-    let thread = text(&body, "thread")
-        .ok_or_else(|| ApiError::bad_request("thread is required"))?;
+    let thread =
+        text(&body, "thread").ok_or_else(|| ApiError::bad_request("thread is required"))?;
     let thread = canonical(thread).into_owned();
     let svc = ctx.svc.clone();
     let done = tokio::task::spawn_blocking(move || {
