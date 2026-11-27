@@ -7,6 +7,8 @@ const SWITCH_DOC = 'switch';
 const SWITCH_PATH = '/api/accounts/switch';
 const ANYWAY_PATH = '/api/accounts/switch/anyway';
 const CANCEL_PATH = '/api/accounts/switch/cancel';
+const SKIP_STEP_PATH = '/api/accounts/switch/skip-step';
+const SKIP_THREAD_PATH = '/api/accounts/switch/skip-thread';
 
 const SWITCH_LINK_PARAM = 'switch';
 const TAB_LINK_PARAM = 'tab';
@@ -14,6 +16,8 @@ const TAB_LINK_PARAM = 'tab';
 const RUNNING_PHASES: ReadonlySet<SwitchPhase> = new Set<SwitchPhase>(['countdown', 'handover', 'sync', 'switching', 'verifying']);
 const WAITING_PHASE: DesktopPhase = 'waiting_for_quit';
 const CANCELABLE_PHASES: ReadonlySet<SwitchPhase> = new Set<SwitchPhase>(['countdown', 'handover']);
+
+const SKIPPABLE_STAGES: ReadonlySet<SwitchStage> = new Set<SwitchStage>(['countdown', 'handover', 'verify']);
 
 const STAGES: readonly SwitchStage[] = ['detect', 'countdown', 'handover', 'sync', 'switch', 'verify'];
 
@@ -47,12 +51,12 @@ const PHASE_STAGE: Readonly<Partial<Record<SwitchPhase, SwitchStage>>> = {
 };
 
 const STAGE_LABEL: Readonly<Record<SwitchStage, string>> = {
-  detect: 'Detect',
-  countdown: 'Countdown',
-  handover: 'Handover',
-  sync: 'Sync',
-  switch: 'Switch',
-  verify: 'Verify',
+  detect: 'Find working threads',
+  countdown: 'Grace minute',
+  handover: 'Collect handovers',
+  sync: 'Copy sidebar',
+  switch: 'Quit and sign in',
+  verify: 'Check account',
 };
 
 const STAGE_PLAN: Readonly<Record<SwitchStage, string>> = {
@@ -70,8 +74,6 @@ const RUN_STATES = defineStatuses({
   failed: { label: 'Failed', tone: 'danger' },
   skipped: { label: 'Skipped', tone: 'neutral' },
 });
-
-const STEP_STATUSES = defineStatuses({ waiting: { label: 'Waiting', tone: 'neutral' }, ...RUN_STATES });
 
 const THREAD_STATUSES = defineStatuses({
   found: { label: 'Found', tone: 'neutral' },
@@ -94,6 +96,21 @@ const PHASE_STATUSES = defineStatuses({
   failed: { label: 'Failed', tone: 'danger' },
   cancelled: { label: 'Cancelled', tone: 'neutral' },
 });
+
+const STEPPER_STATE: Readonly<Record<SwitchStepState, 'done' | 'current' | 'upcoming'>> = {
+  waiting: 'upcoming',
+  running: 'current',
+  done: 'done',
+  failed: 'done',
+  skipped: 'done',
+};
+const WIZARD_LABEL = 'Switch steps';
+const VIA_TEXT: Readonly<Record<'owner' | 'idle', string>> = { owner: 'Skipped by you.', idle: 'Idle, handover is current.' };
+const DETECT_NONE = 'No working threads.';
+const SKIP_STEP_LABEL = 'Skip this step';
+const SKIP_THREAD_LABEL = 'Skip';
+const SKIP_STEP_TOAST = 'Step skipped.';
+const SKIP_THREAD_TOAST = 'Thread skipped.';
 
 const COUNT_KEYS: readonly (keyof SwitchSyncCounts)[] = ['copied', 'updated', 'folders', 'archived'];
 
@@ -124,15 +141,14 @@ const BY_OWNER = 'Started by you.';
 const HANDOVER_TOGGLE = 'Ask working threads for a handover first';
 const START_LABEL = 'Start switch';
 const CANCEL_LABEL = 'Cancel';
-const ANYWAY_LABEL = 'Switch anyway';
 const NOW_LABEL = 'Switch now';
 const SWITCH_STARTED = 'Switch started.';
 const ANYWAY_TOAST = 'Not waiting for the rest.';
 const SWITCH_CANCELLED_TOAST = 'Switch cancelled.';
 
 export {
-  ANYWAY_LABEL, ANYWAY_PATH, ANYWAY_TOAST, AT_ZERO_HANDOVER, AT_ZERO_SYNC, BY_OWNER, BY_RULE, CANCELABLE_PHASES, CANCEL_LABEL, WAITING_PHASE, CANCEL_PATH, COUNT_KEYS,
+  ANYWAY_PATH, ANYWAY_TOAST, AT_ZERO_HANDOVER, AT_ZERO_SYNC, BY_OWNER, BY_RULE, CANCELABLE_PHASES, CANCEL_LABEL, WAITING_PHASE, CANCEL_PATH, COUNT_KEYS, DETECT_NONE,
   HANDOVER_TOGGLE, LAST_RUN, MOVING_TITLE, LEGACY_STAGE, LEGACY_STATE, NO_RECORD, NO_REASON, NO_RUN_YET, NO_SWITCH, NO_THREADS, NOT_REACHED, NOW_LABEL, PHASE_STAGE, PHASE_STATUSES, PHASE_TITLE, RUNNING_PHASES,
-  STAGE_LABEL, STAGE_PLAN, STAGES, START_LABEL, STEP_STATUSES, STUCK_PREFIX, SWITCH_CANCELLED_TOAST, SWITCH_DOC, SWITCH_LINK_PARAM, SWITCH_PATH,
-  SWITCH_STARTED, SYNC_STATUSES, SYNC_TITLE, SYNC_UNSTARTED, TAB_LINK_PARAM, THREAD_STATUSES, THREADS_TITLE, THREADS_UNCHECKED, ZERO_GRACE_MS, ZERO_TEXT,
+  STAGE_LABEL, STAGE_PLAN, STAGES, START_LABEL, STUCK_PREFIX, SWITCH_CANCELLED_TOAST, SWITCH_DOC, SWITCH_LINK_PARAM, SWITCH_PATH,
+  SWITCH_STARTED, SYNC_STATUSES, SKIP_STEP_LABEL, SKIP_STEP_PATH, SKIP_STEP_TOAST, SKIP_THREAD_LABEL, SKIP_THREAD_PATH, SKIP_THREAD_TOAST, SKIPPABLE_STAGES, STEPPER_STATE, VIA_TEXT, WIZARD_LABEL, SYNC_TITLE, SYNC_UNSTARTED, TAB_LINK_PARAM, THREAD_STATUSES, THREADS_TITLE, THREADS_UNCHECKED, ZERO_GRACE_MS, ZERO_TEXT,
 };

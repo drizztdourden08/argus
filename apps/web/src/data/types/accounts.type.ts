@@ -141,6 +141,7 @@ interface SwitchThreadDoc {
   sessionId?: string | null;
   state?: SwitchThreadState;
   note?: string | null;
+  via?: 'owner' | 'idle';
 }
 
 type SwitchSyncState = 'pending' | 'running' | 'done' | 'failed' | 'skipped';

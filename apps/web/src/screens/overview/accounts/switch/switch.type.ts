@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { StepperStep } from '@drizztdourden08/tessera';
 import type { AccountsSwitch, SwitchStage, SwitchStepState, SwitchSyncDoc, SwitchThreadDoc } from '../../../../data/types';
 import type { Account } from '../accounts.type';
 
@@ -9,6 +10,8 @@ interface SwitchActions {
   start: (to: string, handover: boolean) => void;
   anyway: () => void;
   cancel: () => void;
+  skipStep: (stage: SwitchStage) => void;
+  skipThread: (board: string, thread: string) => void;
 }
 
 interface SwitchLink {
@@ -39,14 +42,36 @@ interface ProcessSummaryProps {
   accounts: readonly Account[];
 }
 
-interface StageRowProps {
-  view: StageView;
+interface StepBodyProps {
   doc: AccountsSwitch;
+  stage: SwitchStage;
+}
+
+interface WizardModel {
+  steps: StepperStep[];
+  currentId: SwitchStage | undefined;
+  complete: boolean;
+}
+
+interface WizardView {
+  shown: SwitchStage | undefined;
+  show: (id: string) => void;
 }
 
 interface ThreadListProps {
   threads: readonly SwitchThreadDoc[];
   checked: boolean;
+  skippable: boolean;
+}
+
+interface ThreadRowProps {
+  thread: SwitchThreadDoc;
+  skippable: boolean;
+}
+
+interface WizardPick {
+  stage: SwitchStage;
+  from: SwitchStage | undefined;
 }
 
 interface SyncBlockProps {
@@ -60,6 +85,6 @@ interface SwitchConfirmProps {
 }
 
 export type {
-  ProcessDocProps, ProcessPanelProps, ProcessSummaryProps, StageRowProps, StageView, SwitchActions, SwitchConfirmProps, SwitchLink, SyncBlockProps,
-  ThreadListProps, TitleText,
+  ProcessDocProps, ProcessPanelProps, ProcessSummaryProps, StageView, StepBodyProps, SwitchActions, SwitchConfirmProps, SwitchLink, SyncBlockProps,
+  ThreadListProps, ThreadRowProps, TitleText, WizardModel, WizardPick, WizardView,
 };
