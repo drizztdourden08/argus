@@ -593,11 +593,30 @@ fn with_error(mut doc: Value, error: Option<&str>) -> Value {
 /// The stages of one switch that need the server.
 struct ServerStages<'a> {
     run: &'a Prepared,
+    backup: Backup,
+}
+
+/// The backup folder the sync of this switch wrote, kept so a rollback can put it back.
+#[derive(Default)]
+struct Backup(Mutex<Option<String>>);
+
+impl Backup {
+    fn keep(&self, dir: Option<&String>) {
+        *self.0.lock().unwrap_or_else(PoisonError::into_inner) = dir.cloned();
+    }
+
+    /// The folder, once: a second undo has nothing to put back.
+    fn take(&self) -> Option<String> {
+        self.0.lock().unwrap_or_else(PoisonError::into_inner).take()
+    }
 }
 
 impl<'a> ServerStages<'a> {
     fn new(run: &'a Prepared) -> Self {
-        ServerStages { run }
+        ServerStages {
+            run,
+            backup: Backup::default(),
+        }
     }
 
     fn wait_ready(
@@ -694,6 +713,7 @@ impl Stages for ServerStages<'_> {
                 return Err(error);
             }
         };
+        self.backup.keep(summary.backup_dir.as_ref());
         if !summary.verified {
             let error = format!(
                 "the copy wrote but its check found changes left: {}",
@@ -725,6 +745,18 @@ impl Stages for ServerStages<'_> {
 
     fn skip_wait(&self) -> bool {
         self.run.control.skip_wait.load(Ordering::SeqCst)
+    }
+
+    fn undo(&self) {
+        let Some(dir) = self.backup.take() else {
+            return;
+        };
+        if let Err(e) = self.run.accounts.undo_sync(Some(&dir), false) {
+            self.run.svc.log.warn(
+                "accounts sync not undone by the rollback",
+                json!({ "error": e, "backup": dir }),
+            );
+        }
     }
 
     fn closed(&self) {
@@ -869,7 +901,24 @@ fn put_login(
 mod tests {
     use argus_accounts::desktop::{Done, Step, StepStatus};
 
-    use super::{Control, Origin, outcome_of, switch_doc, with_error};
+    use super::{Backup, Control, Origin, outcome_of, switch_doc, with_error};
+
+    #[test]
+    fn a_rollback_gets_the_backup_of_the_sync_once() {
+        let backup = Backup::default();
+        assert_eq!(backup.take(), None);
+        backup.keep(Some(&"b-1".to_owned()));
+        assert_eq!(backup.take(), Some("b-1".to_owned()));
+        assert_eq!(backup.take(), None);
+    }
+
+    #[test]
+    fn a_sync_that_wrote_nothing_leaves_nothing_to_undo() {
+        let backup = Backup::default();
+        backup.keep(Some(&"b-1".to_owned()));
+        backup.keep(None);
+        assert_eq!(backup.take(), None);
+    }
 
     #[test]
     fn cancel_works_until_the_last_call() {
