@@ -274,12 +274,7 @@ impl SidebarStore for LevelDbSidebar {
         self.read_keys().map(|k| k.to_value())
     }
 
-    fn write(
-        &self,
-        keys: &Value,
-        scanned: &Value,
-        target: Option<&Scope>,
-    ) -> Result<(), String> {
+    fn write(&self, keys: &Value, scanned: &Value, target: Option<&Scope>) -> Result<(), String> {
         self.write_keys(
             &SidebarKeys::from_value(keys)?,
             &SidebarKeys::from_value(scanned)?,
@@ -374,7 +369,10 @@ mod tests {
         let store = LevelDbSidebar::at(dir.path().to_path_buf());
         let mut stale = live.clone();
         stale.dframe_store = json!({"state": {"older": true}});
-        assert_eq!(store.write_keys(&live, &stale, None), Err(CHANGED.to_owned()));
+        assert_eq!(
+            store.write_keys(&live, &stale, None),
+            Err(CHANGED.to_owned())
+        );
         assert!(store.write_keys(&live, &live, None).is_ok());
     }
 
@@ -395,7 +393,8 @@ mod tests {
             db.put(&full_key(name), &encode_value(1, value).unwrap())
                 .unwrap();
         }
-        db.put(&full_key(PENDING_BASE), &encode_text("old")).unwrap();
+        db.put(&full_key(PENDING_BASE), &encode_text("old"))
+            .unwrap();
         db.close().unwrap();
         live
     }

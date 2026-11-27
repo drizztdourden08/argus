@@ -10,8 +10,8 @@ use std::time::Duration;
 use argus_accounts::desktop::ClaudeDesktop;
 use argus_accounts::{
     Account, AccountsConfig, AuthProbe, BurnHistory, ClaudeAuthProbe, CliCredentials, Credentials,
-    DesktopApp, HttpUsage, Poll, PollResult, ReadOnlyCredentials, Schedule, Usage, UsageSource, discover,
-    find_app_data, find_cli_exe, poll_all, refresh_identities,
+    DesktopApp, HttpUsage, Poll, PollResult, ReadOnlyCredentials, Schedule, Usage, UsageSource,
+    discover, find_app_data, find_cli_exe, poll_all, refresh_identities,
 };
 use argus_core::ConfigError;
 use argus_core::clock::now_ms;

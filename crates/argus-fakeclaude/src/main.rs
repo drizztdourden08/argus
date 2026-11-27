@@ -22,7 +22,9 @@ const POLL: Duration = Duration::from_millis(50);
 const MAX_LIFE: Duration = Duration::from_secs(180);
 
 fn now_ms() -> i64 {
-    let since = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
+    let since = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default();
     i64::try_from(since.as_millis()).unwrap_or(i64::MAX)
 }
 

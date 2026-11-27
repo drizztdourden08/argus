@@ -11,9 +11,7 @@ use std::sync::{Arc, OnceLock};
 use std::time::Duration;
 
 use argus_accounts::desktop::{Launch, Limits, ProcessApp};
-use argus_accounts::{
-    AuthProbe, CliStatus, Credentials, DesktopApp, Usage, UsageSource,
-};
+use argus_accounts::{AuthProbe, CliStatus, Credentials, DesktopApp, Usage, UsageSource};
 use argus_core::Coll;
 use argus_core::ids::PORTFOLIO;
 use argus_server::{ServeMode, ServeOptions};
@@ -62,7 +60,10 @@ fn fake_exe() -> PathBuf {
     static EXE: OnceLock<PathBuf> = OnceLock::new();
     EXE.get_or_init(|| {
         let test_exe = std::env::current_exe().expect("test exe");
-        let profile = test_exe.parent().and_then(Path::parent).expect("profile dir");
+        let profile = test_exe
+            .parent()
+            .and_then(Path::parent)
+            .expect("profile dir");
         let name = format!("argus-fakeclaude{}", std::env::consts::EXE_SUFFIX);
         let cargo = std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_owned());
         let mut build = Command::new(cargo);
@@ -70,7 +71,10 @@ fn fake_exe() -> PathBuf {
         if profile.file_name().is_some_and(|n| n == "release") {
             build.arg("--release");
         }
-        assert!(build.status().expect("cargo runs").success(), "the fake app builds");
+        assert!(
+            build.status().expect("cargo runs").success(),
+            "the fake app builds"
+        );
         profile.join(name)
     })
     .clone()
@@ -159,7 +163,11 @@ async fn rig(tray: bool, force_quit: bool) -> Rig {
     let dashboard = dir.path().join("dashboard");
     let logins = dashboard.join("accounts").join("logins");
     let home = SimHome::build(dir.path(), &logins);
-    let app = Arc::new(ProcessApp::new(&home.app, launch(&home, tray), limits(tray)));
+    let app = Arc::new(ProcessApp::new(
+        &home.app,
+        launch(&home, tray),
+        limits(tray),
+    ));
     app.start().expect("the fake Claude starts");
     let t = TestServer::start(TestOptions {
         config: home.accounts_setting(force_quit),
@@ -177,7 +185,11 @@ async fn rig(tray: bool, force_quit: bool) -> Rig {
 }
 
 fn switch_doc(t: &TestServer) -> Option<Value> {
-    let row = t.svc.db.docs().get(PORTFOLIO, Coll::AccountsState, "switch");
+    let row = t
+        .svc
+        .db
+        .docs()
+        .get(PORTFOLIO, Coll::AccountsState, "switch");
     row.ok().flatten().map(|row| row.data)
 }
 
@@ -258,7 +270,11 @@ async fn a_tray_app_is_ended_by_its_own_pid_with_force_quit_and_the_switch_goes_
         !error_of(&doc).contains("did not quit"),
         "the forced close worked: {doc}"
     );
-    assert_eq!(r.home.signed_in(), ACCOUNT_B, "the login was swapped: {doc}");
+    assert_eq!(
+        r.home.signed_in(),
+        ACCOUNT_B,
+        "the login was swapped: {doc}"
+    );
     assert!(r.app.is_running(), "Claude was started again");
 }
 

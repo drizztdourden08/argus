@@ -44,12 +44,7 @@ impl SidebarStore for FakeSidebar {
         Ok(self.0.lock().unwrap().clone())
     }
 
-    fn write(
-        &self,
-        keys: &Value,
-        scanned: &Value,
-        _target: Option<&Scope>,
-    ) -> Result<(), String> {
+    fn write(&self, keys: &Value, scanned: &Value, _target: Option<&Scope>) -> Result<(), String> {
         let mut live = self.0.lock().unwrap();
         if *live != *scanned {
             return Err(CHANGED.to_owned());

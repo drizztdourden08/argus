@@ -75,7 +75,11 @@ fn derive(keys: &mut SidebarKeys) {
     }
     for (scope, entry) in by_scope("codeSidebarByScope") {
         let sections = entry.get("sections").cloned().unwrap_or_else(|| json!([]));
-        set_scope(&mut keys.code_sections, &scope, json!({ "sections": sections }));
+        set_scope(
+            &mut keys.code_sections,
+            &scope,
+            json!({ "sections": sections }),
+        );
     }
 }
 
